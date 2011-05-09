@@ -148,6 +148,19 @@ def wcs(cdelt1, cdelt2, crpix1, crpix2, crval1, crval2):
     dec = crval2 + cdelt2*(np.arange(1, 4) - crpix2)
     return RA, dec
 
+def movaver(x, y, window_len=4):
+    """Moving average and resampling"""
+    if x[1] < x[0]:
+        x = x[::-1]
+        y = y[::-1]
+    if x.size < window_len:
+        raise ValueError, "Input vector needs to be bigger than window size."
+    w = np.ones(window_len, 'd')
+    s = np.convolve(w/w.sum(), y, mode='same')
+    fint = interpolate.interp1d(x, s)
+    newx = np.linspace(x[3], x[-4], x.shape[0]/window_len)
+    return newx, fint(newx)
+
 def smooth(x,window_len=11,window='hanning'):
     """smooth the data using a window with requested size.
     
