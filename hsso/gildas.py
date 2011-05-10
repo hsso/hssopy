@@ -166,8 +166,12 @@ def movav(x, y, window_len=4):
     """Moving average and resampling"""
     if x.size < window_len:
         raise ValueError, "Input vector needs to be bigger than window size."
-    newx = x[:-(x.size%window_len)].reshape(x.size/window_len, window_len)
-    newy = y[:-(x.size%window_len)].reshape(x.size/window_len, window_len)
+    if x.size%window_len:
+        newx = x[:-(x.size%window_len)].reshape(x.size/window_len, window_len)
+        newy = y[:-(x.size%window_len)].reshape(x.size/window_len, window_len)
+    else:
+        newx = x.reshape(x.size/window_len, window_len)
+        newy = y.reshape(x.size/window_len, window_len)
     return np.average(newx, axis=1), np.average(newy, axis=1)
 
 def smooth(x,window_len=11,window='hanning'):
