@@ -1,5 +1,5 @@
 #!/usr/bin/python
-"""Herschel functions"""
+"""Herschel related functions"""
 
 from scipy import constants
 import astrocon as ac
@@ -13,20 +13,36 @@ import numpy as np
 freq = {'H2O': [556.9360020]}
 beameff = [.75]
 
+def radec(header):
+    """Calculate angular coordinates from FITS keywords"""
+    # ra and dec FITS keywords
+    naxis1 = header['naxis1'] # number of columns
+    naxis2 = header['naxis2'] # number of rows
+    crval1 = header['crval1']
+    cdelt1 = header['cdelt1']
+    crpix1 = header['crpix1']
+    crval2 = header['crval2']
+    cdelt2 = header['cdelt2']
+    crpix2 = header['crpix2']
+    # define ra and dec grids
+    lon = crval1 + cdelt1*(np.arange(1, naxis1+1) - crpix1)
+    lat = crval2 + cdelt2*(np.arange(1, naxis2+1) - crpix2)
+    return lon, lat
+    
 def fwhm(freq=freq['H2O'][0]*1e9, diam=3.5, unit='arcsec'):
     """Calculate FWHM
     
-    freq: rest frequency (Hz)
-    diam: diameter (m)"""
+    freq -- rest frequency (Hz)
+    diam -- diameter (m)"""
     fwhm = 1.2*constants.c/freq/diam
     if unit=='arcsec': fwhm *= 180/math.pi*3600 # convert rad to arcsec
     return fwhm
 
-def size(arcsec, delta=1): # km
-    """Calculate projected beam size
+def size(arcsec, delta=1):
+    """Calculate projected beam size at the comet in km
     
-    arcsec: angular size
-    delta: distance to Earth (AU)"""
+    arcsec -- angular size (")
+    delta -- distance to Earth (AU)"""
     return delta*ac.AU*math.sin(arcsec/3600.*math.pi/180)/1e5
 
 class HifiMap(object):
@@ -112,7 +128,9 @@ def hifimap(filename, freq0, sideband='USB', subband=1, obsid=1, correct=True):
     return fvals, longitudes, latitudes
 
 def hsafits(datadir, obsid, reciever):
-    """find level 2 FITS file"""
-    dirname = '{0}/{1}/level2/{2}/'.format(datadir, obsid, reciever)
+    """find HSA FITS file"""
+#     dirname = '{0}/{1}/level2/{2}/'.format(datadir, obsid, reciever)
+#     dirname = os.path.join(datadir, str(obsid), 'level2', reciever)
+    dirname = os.path.join(datadir, str(obsid), reciever)
     fitsfile = os.listdir(dirname)[0]
-    return dirname+fitsfile
+    return os.path.join(dirname, fitsfile)
