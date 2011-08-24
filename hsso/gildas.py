@@ -13,7 +13,15 @@ def gauss(sigma, mu=0):
     return lambda x: np.exp(-(x-mu)**2/(2.*sigma**2))/sigma/np.sqrt(2*np.pi)
 
 def stitchn(freq, flux, goodval=False):
-    """stitch subbands"""
+    """stitch subbands
+
+    Parameters
+    ----------
+    freq : list of arrays
+        input frequencies
+    flux : list of arrays
+        input fluxes
+    """
     wave = np.concatenate([i for i in freq ])
     _flux = np.concatenate([i for i in flux ])
     # sort frequencies
@@ -59,6 +67,8 @@ def average(freqh, fluxh, freqv, fluxv, goodval=False):
 def averagen(wave, flux, goodval=False):
     """Average spectra
     
+    Parameters
+    ----------
     wave : list of arrays
         input frequencies
     flux : list of arrays 
@@ -72,6 +82,7 @@ def averagen(wave, flux, goodval=False):
         sortval = np.argsort(wave[i])
         f = interpolate.interp1d(wave[i][sortval], flux[i][sortval], bounds_error=False)
         fluxav += f(wave[0])
+    # average total flux
     fluxav /= len(flux)
     if goodval:
         # return finite fluxes
