@@ -45,6 +45,13 @@ def size(arcsec, delta=1):
     delta -- distance to Earth (AU)"""
     return delta*ac.AU*math.sin(arcsec/3600.*math.pi/180)/1e5
 
+def angsize(au, delta=1):
+    """Calculate angular size
+    
+    au -- size (AU)
+    delta -- distance to Earth (AU)"""
+    return au/delta*180/math.pi*3600
+
 class HifiMap(object):
     """Calculate line intensity map and coordinates"""
 
