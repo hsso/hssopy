@@ -79,9 +79,9 @@ class HifiMap(object):
                 self.latitudes[j-1,k] = hdulist[j].data.field('latitude')[k] 
                 if correct:
                     self.longitudes[j-1,k] -=  gildas.deltadot(timestr,
-                        filename="/home/miguel/HssO/Hartley2/python/horizons.txt", column=2)
+                        filename="/home/miguel/HssO/45P/python/horizons_results.txt", column=2)
                     self.latitudes[j-1,k] -= gildas.deltadot(timestr,
-                        filename="/home/miguel/HssO/Hartley2/python/horizons.txt", column=3)
+                        filename="/home/miguel/HssO/45P/python/horizons_results.txt", column=3)
                 # read frequency and flux
                 freq = hdulist[j].data.field('{0}frequency_{1}'.format(sideband.lower(), subband))[k]
                 flux = hdulist[j].data.field('flux_{0}'.format(subband))[k]
