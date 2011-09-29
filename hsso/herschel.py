@@ -80,6 +80,7 @@ class HifiMap(object):
                 if correct:
                     self.longitudes[j-1,k] -=  gildas.deltadot(timestr,
                         filename="/home/miguel/HssO/45P/python/horizons_results.txt", column=2)
+                    self.longitudes[j-1,k] *= np.cos(self.latitudes[j-1,k] * math.pi / 180.)
                     self.latitudes[j-1,k] -= gildas.deltadot(timestr,
                         filename="/home/miguel/HssO/45P/python/horizons_results.txt", column=3)
                 # read frequency and flux
