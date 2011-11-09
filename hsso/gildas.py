@@ -9,6 +9,15 @@ from matplotlib.dates import date2num
 import matplotlib.pyplot as plt
 from datetime import datetime
 
+def frac_day(dt):
+    """Calculate fractional day
+
+    Parameters
+    ----------
+    dt : datetime.datetime object
+    """
+    return dt.day + (dt-datetime.datetime(dt.year, dt.month, dt.day))/datetime.timedelta(1)
+
 def gauss(sigma, mu=0):
     return lambda x: np.exp(-(x-mu)**2/(2.*sigma**2))/sigma/np.sqrt(2*np.pi)
 
