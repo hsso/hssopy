@@ -146,6 +146,7 @@ def deltadot(middate, filename="/home/miguel/HssO/Wild2/horizons.txt", column=5)
     """
     # read year, month, day and hour minute from the table
     ymd, hm = np.loadtxt(filename, dtype='S', usecols=(0,1), unpack=True)
+    # read quantity from JPL Horizons ephemris file
     vdot = np.loadtxt(filename, usecols=(column,), unpack=True)
     datenum = np.zeros(len(ymd))
     for i in range(len(ymd)):
