@@ -137,6 +137,13 @@ def rms(flux, vel, lim=[2, 6]):
     return np.std(flux[mask])
 
 def vshift(flux, vel, lim=[-1.2, 1.2]):
+    """Calculate velocity offset as weighted average
+
+    Returns
+    -------
+    out: tuple of arrays
+        Returns a tuple with velocity offset and error arrays in m/s
+    """
     mask = np.where((vel > lim[0]) & (vel < lim[1]))
     n = len(flux[mask])
     stderr = np.sqrt(np.sum(vel[mask]**2)*np.sum(flux[mask])**2 +
