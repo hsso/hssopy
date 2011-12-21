@@ -16,14 +16,18 @@ def convert_ascii(obsid, hsadir, asciidir):
                 fitsfile = os.listdir(obsdir)[0]
                 hdulist = pyfits.open(os.path.join(obsdir, fitsfile))
                 print obsdir, fitsfile
-                for j in range(1, len(hdulist)):
-                    for i in range(1,5):
-                        if 'flux_{0}'.format(i) in hdulist[j].columns.names:
-                            print '{0}frequency_{1}'.format(sb.lower(), i)
-                            freq = hdulist[j].data.field('{0}frequency_{1}'.format(sb.lower(), i))[0]
-                            flux = hdulist[j].data.field('flux_{0}'.format(i))[0]
-                            outfile = os.path.join(asciidir,
-                                '{0}_{1}-{2}-{3}_{4:02}_{5}.txt'.format(obsid, rec, pol, sb, j, i))
-                            np.savetxt(outfile, np.transpose((freq, flux)))
-                            # Set proper permissions
-                            os.chmod(outfile, 644)
+                convert_one(hdulist, obsid, rec, pol, sb, asciidir)
+
+def convert_one(hdulist, obsid, rec, pol, sb, asciidir, suffix=''):
+    for j in range(1, len(hdulist)):
+        for i in range(1,5):
+            if 'flux_{0}'.format(i) in hdulist[j].columns.names:
+                print '{0}frequency_{1}'.format(sb.lower(), i)
+                freq = hdulist[j].data.field('{0}frequency_{1}'.format(sb.lower(), i))[0]
+                flux = hdulist[j].data.field('flux_{0}'.format(i))[0]
+                outfile = os.path.join(asciidir,
+                    '{0}_{1}-{2}-{3}_{4:02}_{5}{6}.txt'.format(obsid, rec, pol,
+                        sb, j, i, suffix))
+                np.savetxt(outfile, np.transpose((freq, flux)))
+                # Set proper permissions
+                os.chmod(outfile, 0644)
