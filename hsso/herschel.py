@@ -55,7 +55,8 @@ def angsize(au, delta=1):
 class HifiMap(object):
     """Calculate line intensity map and coordinates"""
 
-    def __init__(self, filename, freq0, sideband='USB', subband=1, correct=True):
+    def __init__(self, filename, freq0, sideband='USB', subband=1, correct=True,
+            horizons="/home/miguel/HssO/Hartley2/python/horizons.txt"):
         self.filename = filename
         # read HSA FITS file
         hdulist = pyfits.open(filename)
@@ -79,10 +80,10 @@ class HifiMap(object):
                 self.latitudes[j-1,k] = hdulist[j].data.field('latitude')[k] 
                 if correct:
                     self.longitudes[j-1,k] -=  gildas.deltadot(timestr,
-                        filename="/home/miguel/HssO/45P/python/horizons_results.txt", column=2)
+                        filename=horizons, column=2)
                     self.longitudes[j-1,k] *= np.cos(self.latitudes[j-1,k] * math.pi / 180.)
                     self.latitudes[j-1,k] -= gildas.deltadot(timestr,
-                        filename="/home/miguel/HssO/45P/python/horizons_results.txt", column=3)
+                        filename=horizons, column=3)
                 # read frequency and flux
                 freq = hdulist[j].data.field('{0}frequency_{1}'.format(sideband.lower(), subband))[k]
                 flux = hdulist[j].data.field('flux_{0}'.format(subband))[k]
