@@ -122,12 +122,24 @@ def freq(vel, freq0, deltadot=0.):
     return freq0*(1. - (vel + deltadot)/constants.c/1e-3)
 
 def intens(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5]):
-    """return intensity in K km/s with statistical error"""
+    """return intensity in K km/s with statistical error
+
+    Parameters
+    ----------
+    flux : 1-D array
+        Array containing flux data
+    vel : 1-D array
+        Array containing velocities data
+
+    Returns
+    -------
+    intensity, rms error : float, float
+    """
     # sort velocities
     sortval = np.argsort(vel)
     idx = np.where((vel[sortval] >= lim[0]) & (vel[sortval] <= lim[1]))
-    n = len(flux[sortval][idx])
     delv = np.average(vel[sortval][idx][1:] - vel[sortval][idx][:-1])
+    n = len(flux[sortval][idx])
     stderr = np.sqrt(n) * delv * rms(flux, vel, rmslim)
     return simps(flux[sortval][idx], vel[sortval][idx]), stderr
 
