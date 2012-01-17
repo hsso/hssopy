@@ -121,7 +121,7 @@ def freq(vel, freq0, deltadot=0.):
     """return frequency scale"""
     return freq0*(1. - (vel + deltadot)/constants.c/1e-3)
 
-def intens(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5]):
+def intens(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5], rmserror=None):
     """return intensity in K km/s with statistical error
 
     Parameters
@@ -140,7 +140,10 @@ def intens(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5]):
     idx = np.where((vel[sortval] >= lim[0]) & (vel[sortval] <= lim[1]))
     delv = np.average(vel[sortval][idx][1:] - vel[sortval][idx][:-1])
     n = len(flux[sortval][idx])
-    stderr = np.sqrt(n) * delv * rms(flux, vel, rmslim)
+    if rmserror:
+        stderr = np.sqrt(n) * delv * rmserror
+    else:
+        stderr = np.sqrt(n) * delv * rms(flux, vel, rmslim)
     return simps(flux[sortval][idx], vel[sortval][idx]), stderr
 
 def rms(flux, vel, lim=[2, 6]):
