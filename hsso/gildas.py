@@ -151,7 +151,7 @@ def rms(flux, vel, lim=[2, 6]):
     mask = np.where((vel > lim[0]) & (vel < lim[1]))
     return np.std(flux[mask])
 
-def vshift(flux, vel, lim=[-1.2, 1.2]):
+def vshift(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5]):
     """Calculate velocity offset as weighted average
 
     Returns
@@ -164,7 +164,7 @@ def vshift(flux, vel, lim=[-1.2, 1.2]):
     stderr = np.sqrt(np.sum(vel[mask]**2)*np.sum(flux[mask])**2 +
             n*np.dot(vel[mask], flux[mask])**2 -
             np.sum(vel[mask])*np.sum(flux[mask])*np.dot(vel[mask], flux[mask]))/ \
-            np.sum(flux[mask])**2 * rms(flux, vel, [2, 20])
+            np.sum(flux[mask])**2 * rms(flux, vel, rmslim)
     return np.average(vel[mask], weights=flux[mask])*1e3, stderr*1e3
 
 def deltadot(middate, filename="/home/miguel/HssO/Wild2/horizons.txt", column=5):
