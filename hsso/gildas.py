@@ -16,7 +16,7 @@ def frac_day(dt):
     ----------
     dt : datetime.datetime object
     """
-    return dt.day + dt.hour/24. + dt.minute/24./60.
+    return dt.day + dt.hour/24. + dt.minute/24./60. + dt.second/3600./24.
 # python3
 #     return dt.day + (dt-datetime(dt.year, dt.month, dt.day))/timedelta(1)
 
