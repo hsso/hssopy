@@ -7,7 +7,7 @@ from scipy import constants
 from scipy.integrate import simps
 from matplotlib.dates import date2num
 import matplotlib.pyplot as plt
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def frac_day(dt):
     """Calculate fractional day
@@ -16,7 +16,9 @@ def frac_day(dt):
     ----------
     dt : datetime.datetime object
     """
-    return dt.day + (dt-datetime.datetime(dt.year, dt.month, dt.day))/datetime.timedelta(1)
+    return dt.day + dt.hour/24. + dt.minute/24./60.
+# python3
+#     return dt.day + (dt-datetime(dt.year, dt.month, dt.day))/timedelta(1)
 
 def gauss(sigma, mu=0):
     return lambda x: np.exp(-(x-mu)**2/(2.*sigma**2))/sigma/np.sqrt(2*np.pi)
