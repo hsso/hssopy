@@ -52,6 +52,11 @@ def angsize(au, delta=1):
     delta -- distance to Earth (AU)"""
     return au/delta*180/math.pi*3600
 
+def finetime(microseconds):
+    timestr = datetime(year=1958,month=1,day=1,hour=0,minute=0,second=0) + \
+        timedelta(microseconds=microseconds)
+    return timestr
+
 class HifiMap(object):
     """Calculate line intensity map and coordinates"""
 
