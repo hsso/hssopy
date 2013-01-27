@@ -20,6 +20,12 @@ def frac_day(dt):
 # python3
 #     return dt.day + (dt-datetime(dt.year, dt.month, dt.day))/timedelta(1)
 
+def day_to_dt(year, month, dday):
+    """Calculate datetime object from decimal day"""
+    from math import modf
+    decimal, day = modf(dday)
+    return datetime(year, month, int(day)) + timedelta(seconds=int(decimal*24*3600))
+
 def gauss(sigma, mu=0):
     return lambda x: np.exp(-(x-mu)**2/(2.*sigma**2))/sigma/np.sqrt(2*np.pi)
 
