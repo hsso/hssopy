@@ -82,7 +82,7 @@ def averagen(wave, flux, goodval=False):
     ----------
     wave : list of arrays
         input frequencies
-    flux : list of arrays 
+    flux : list of arrays
         input fluxes
     goodval : bool, optional
         return finite values
@@ -189,11 +189,10 @@ def deltadot(middate, filename="/home/miguel/HssO/Wild2/horizons.txt", column=5)
     """
     # read year, month, day and hour minute from the table
     ymd, hm = np.loadtxt(filename, dtype='S', usecols=(0,1), unpack=True)
+    ymdhm = np.core.defchararray.add(ymd, hm)
     # read quantity from JPL Horizons ephemris file
     vdot = np.loadtxt(filename, usecols=(column,), unpack=True)
-    datenum = np.zeros(len(ymd))
-    for i in range(len(ymd)):
-        datenum[i] = date2num(datetime.strptime(ymd[i]+hm[i], "%Y-%b-%d%H:%M"))
+    datenum = [date2num(datetime.strptime(i, "%Y-%b-%d%H:%M")) for i in ymdhm]
     # 1D interpolation
     return interpolate.interp1d(datenum, vdot)(date2num(middate))
 
