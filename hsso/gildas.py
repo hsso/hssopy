@@ -93,7 +93,7 @@ def averagen(wave, flux, goodval=False):
     goodval : bool, optional
         return finite values
     """
-    fluxav = 0.
+    fluxav = np.zeros(len(wave[0]))
     for i in range(len(wave)):
         # sort frequencies
         sortval = np.argsort(wave[i])
@@ -159,7 +159,7 @@ def rms(flux, vel, lim=[2, 6]):
     mask = np.where((vel > lim[0]) & (vel < lim[1]))
     return np.std(flux[mask])
 
-def vshift(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5]):
+def vshift(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5], rmserror=None):
     """Calculate velocity offset as weighted average
 
     Parameters
@@ -174,15 +174,19 @@ def vshift(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5]):
     out : tuple of arrays
         Returns a tuple with velocity offset and error in m/s
     """
-    mask = np.where((vel > lim[0]) & (vel < lim[1]))
-    n = len(flux[mask])
     # propagation error
     # stderr = np.sqrt(np.sum([d(np.dot(T,v)/np.sum(T))/dTi]**2)) * rms
     # stderr = np.sqrt(np.sum([(v*np.sum(T) - np.sum(T*v))/np.sum(T)**2]**2)) * rms
+    if not rmserror: rmserror = rms(flux, vel, rmslim)
+    if lim is not None:
+        mask = np.where((vel > lim[0]) & (vel < lim[1]))
+    else:
+        mask = np.where((vel > -1e6))
+    n = len(flux[mask])
     stderr = np.sqrt(np.sum(vel[mask]**2)*np.sum(flux[mask])**2 +
             n*np.dot(vel[mask], flux[mask])**2 -
             2*np.sum(vel[mask])*np.sum(flux[mask])*np.dot(vel[mask], flux[mask]))/ \
-            np.sum(flux[mask])**2 * rms(flux, vel, rmslim)
+            np.sum(flux[mask])**2 * rmserror
     return np.average(vel[mask], weights=flux[mask])*1e3, stderr*1e3
 
 def deltadot(middate, filename="/home/miguel/HssO/Wild2/horizons.txt", column=5):
