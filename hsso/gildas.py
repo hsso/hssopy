@@ -81,7 +81,7 @@ def average(freqh, fluxh, freqv, fluxv, goodval=False):
     else:
         return freqh, fluxav
 
-def averagen(wave, flux, goodval=False):
+def averagen(wave, flux, weights=None, goodval=False):
     """Average spectra
     
     Parameters
@@ -98,9 +98,15 @@ def averagen(wave, flux, goodval=False):
         # sort frequencies
         sortval = np.argsort(wave[i])
         f = interpolate.interp1d(wave[i][sortval], flux[i][sortval], bounds_error=False)
-        fluxav += f(wave[0])
+        if weights:
+            fluxav += f(wave[0])*weights[i]
+        else:
+            fluxav += f(wave[0])
     # average total flux
-    fluxav /= len(flux)
+    if weights:
+        fluxav /= np.sum(weights)
+    else:
+        fluxav /= len(flux)
     if goodval:
         # return finite fluxes
         goodval = np.isfinite(fluxav)
