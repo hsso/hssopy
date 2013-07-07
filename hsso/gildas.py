@@ -20,6 +20,15 @@ def frac_day(dt):
 # python3
 #     return dt.day + (dt-datetime(dt.year, dt.month, dt.day))/timedelta(1)
 
+def frac_hour(dt):
+    """Calculate fractional hour
+
+    Parameters
+    ----------
+    dt : datetime.datetime object
+    """
+    return dt.hour + dt.minute/60. + dt.second/3600.
+
 def day_to_dt(year, month, dday):
     """Calculate datetime object from decimal day"""
     from math import modf
@@ -131,11 +140,11 @@ def vel(freq, freq0, deltadot=0.):
     deltadot: km/s"""
     return constants.c*1e-3 * (freq0-freq)/freq0 - deltadot
 
-def freq(vel, freq0, deltadot=0.):
+def freq(vel, freq0, sign=1, deltadot=0.):
     """return frequency scale"""
-    return freq0*(1. - (vel + deltadot)/constants.c/1e-3)
+    return freq0*(1. - sign*(vel + deltadot)/constants.c/1e-3)
 
-def intens(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5], rmserror=None):
+def intens(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5], rms=None):
     """return intensity in K km/s with statistical error
 
     Parameters
@@ -154,8 +163,8 @@ def intens(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5], rmserror=None):
     idx = np.where((vel[sortval] >= lim[0]) & (vel[sortval] <= lim[1]))
     delv = np.average(vel[sortval][idx][1:] - vel[sortval][idx][:-1])
     n = len(flux[sortval][idx])
-    if rmserror:
-        stderr = np.sqrt(n) * delv * rmserror
+    if rms:
+        stderr = np.sqrt(n) * delv * rms
     else:
         stderr = np.sqrt(n) * delv * rms(flux, vel, rmslim)
     return simps(flux[sortval][idx], vel[sortval][idx]), stderr
