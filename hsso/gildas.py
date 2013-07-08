@@ -38,6 +38,18 @@ def day_to_dt(year, month, dday):
 def gauss(sigma, mu=0):
     return lambda x: np.exp(-(x-mu)**2/(2.*sigma**2))/sigma/np.sqrt(2*np.pi)
 
+def gaussian_fit(X, data):
+    x = np.sum(X*data)/np.sum(data)
+    sigma = np.sqrt(np.abs(np.sum((X-x)**2*data)/np.sum(data)))
+    return x, sigma, data.max()*sigma*np.sqrt(2*np.pi)
+
+def leastsq_fit(X, data):
+    from scipy.optimize import leastsq
+    from scipy.stats import norm
+    residuals = lambda p, x, y: p[2]*norm.pdf(x, p[0], p[1]) - y
+    out = leastsq(residuals, [0, 1, 1], args=(X, data))
+    return out[0]
+
 def stitchn(freq, flux, goodval=False):
     """stitch subbands
 
