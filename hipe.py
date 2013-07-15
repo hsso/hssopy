@@ -26,7 +26,7 @@ for subband in range(1,5):
     if 'flux_{0}'.format(subband) in hdulist[1].data.names:
         freq = hdulist[1].data.field('{0}frequency_{1}'.format(args.sideband.lower(), subband))[0]
         flux = hdulist[1].data.field('flux_{0}'.format(subband))[0]
-        plt.plot(freq, flux, label='subband {0}'.format(subband))
+        plt.plot(freq, flux, label='subband {0}'.format(subband), drawstyle='steps-mid')
 if args.freq: plt.axvline(x=args.freq, linestyle='--')
 plt.legend()
 plt.show()
