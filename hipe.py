@@ -15,6 +15,7 @@ parser.add_argument('--subband', default=1, type=int)
 parser.add_argument('--sideband', default='USB')
 parser.add_argument('--datadir', default='./')
 parser.add_argument('-o', '--obsid', default="75")
+parser.add_argument('-f', '--freq', default=None, type=float)
 args = parser.parse_args()
 
 hdulist = pyfits.open( glob.glob(
@@ -26,5 +27,6 @@ for subband in range(1,5):
         freq = hdulist[1].data.field('{0}frequency_{1}'.format(args.sideband.lower(), subband))[0]
         flux = hdulist[1].data.field('flux_{0}'.format(subband))[0]
         plt.plot(freq, flux, label='subband {0}'.format(subband))
+if args.freq: plt.axvline(x=args.freq, linestyle='--')
 plt.legend()
 plt.show()
