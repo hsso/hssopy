@@ -102,38 +102,32 @@ def average(freqh, fluxh, freqv, fluxv, goodval=False):
     else:
         return freqh, fluxav
 
-def averagen(wave, flux, weights=None, goodval=False):
+def averagen(freq, flux, weights=None, goodval=False):
     """Average spectra
     
     Parameters
     ----------
-    wave : list of arrays
+    freq : list of arrays
         input frequencies
     flux : list of arrays
         input fluxes
     goodval : bool, optional
         return finite values
     """
-    fluxav = np.zeros(len(wave[0]))
-    for i in range(len(wave)):
+    flux_list = [flux[0]]
+    for i in range(1, len(freq)):
         # sort frequencies
-        sortval = np.argsort(wave[i])
-        f = interpolate.interp1d(wave[i][sortval], flux[i][sortval], bounds_error=False)
-        if weights:
-            fluxav += f(wave[0])*weights[i]
-        else:
-            fluxav += f(wave[0])
+        sortval = np.argsort(freq[i])
+        f = interpolate.interp1d(freq[i][sortval], flux[i][sortval], bounds_error=False)
+        flux_list.append(f(freq[0]))
     # average total flux
-    if weights:
-        fluxav /= np.sum(weights)
-    else:
-        fluxav /= len(flux)
+    fluxav = np.average(flux_list, axis=0, weights=weights)
     if goodval:
         # return finite fluxes
         goodval = np.isfinite(fluxav)
-        return wave[0][goodval], fluxav[goodval]
+        return freq[0][goodval], fluxav[goodval]
     else:
-        return wave[0], fluxav
+        return freq[0], fluxav
 
 def basepoly(v, flux, lim, deg=2, debug=False):
     """Calculate baseline"""
@@ -156,7 +150,12 @@ def freq(vel, freq0, sign=1, deltadot=0.):
     """return frequency scale"""
     return freq0*(1. - sign*(vel + deltadot)/constants.c/1e-3)
 
-def intens(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5], rms=None):
+def rms(flux, vel, lim=[2, 6]):
+    """return rms between [xi,xo]"""
+    mask = np.where((vel > lim[0]) & (vel < lim[1]))
+    return np.std(flux[mask])
+
+def intens(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5], rmserror=None):
     """return intensity in K km/s with statistical error
 
     Parameters
@@ -175,16 +174,11 @@ def intens(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5], rms=None):
     idx = np.where((vel[sortval] >= lim[0]) & (vel[sortval] <= lim[1]))
     delv = np.average(vel[sortval][idx][1:] - vel[sortval][idx][:-1])
     n = len(flux[sortval][idx])
-    if rms:
-        stderr = np.sqrt(n) * delv * rms
+    if rmserror:
+        stderr = np.sqrt(n) * delv * rmserror
     else:
-        stderr = np.sqrt(n) * delv * rms(flux, vel, rmslim)
+        stderr = np.sqrt(n) * delv * rms(flux, vel, lim=rmslim)
     return simps(flux[sortval][idx], vel[sortval][idx]), stderr
-
-def rms(flux, vel, lim=[2, 6]):
-    """return rms between [xi,xo]"""
-    mask = np.where((vel > lim[0]) & (vel < lim[1]))
-    return np.std(flux[mask])
 
 def vshift(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5], rmserror=None):
     """Calculate velocity offset as weighted average
