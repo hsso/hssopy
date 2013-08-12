@@ -16,7 +16,7 @@ parser.add_argument('--subband', default=range(1,5), type=int, nargs='+',
                     choices=range(1, 5))
 parser.add_argument('--sideband', default='USB')
 parser.add_argument('--datadir', default='./')
-parser.add_argument('-o', '--obsid', default="75")
+parser.add_argument('-o', '--obsid', default="1342204014")
 parser.add_argument('-f', '--freq', default=None, type=float)
 args = parser.parse_args()
 
