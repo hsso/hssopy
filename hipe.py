@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 parser = argparse.ArgumentParser()
 parser.add_argument('-b', '--backend', default=('WBS',), nargs='+',
                     choices=('HRS', 'WBS'))
-parser.add_argument('--pol', default='H', choices=('H', 'V', 'HV'))
+parser.add_argument('--pol', default=('H',), nargs='+', choices=('H', 'V'))
 parser.add_argument('--subband', default=range(1,5), type=int, nargs='+',
                     choices=range(1, 5))
 parser.add_argument('--sideband', default='USB')
@@ -32,7 +32,7 @@ for be in args.backend:
                         args.sideband.lower(), subband))[0]
                 flux = hdulist[1].data.field('flux_{0}'.format(subband))[0]
                 plt.plot(freq, flux, drawstyle='steps-mid',
-                         label='{0} subband {1}'.format(be, subband))
+                         label='{0}-{1} subband {2}'.format(be, p, subband))
 if args.freq: plt.axvline(x=args.freq, linestyle='--')
 plt.legend()
 plt.show()
