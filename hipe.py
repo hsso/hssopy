@@ -14,9 +14,9 @@ parser.add_argument('-b', '--backend', default=('WBS',), nargs='+',
 parser.add_argument('--pol', default=('H',), nargs='+', choices=('H', 'V'))
 parser.add_argument('--subband', default=range(1,5), type=int, nargs='+',
                     choices=range(1, 5))
-parser.add_argument('--sideband', default='USB')
+parser.add_argument('--sideband', default='USB', choices=('USB', 'LSB'))
 parser.add_argument('--datadir', default='./')
-parser.add_argument('-o', '--obsid', default="1342204014")
+parser.add_argument('-o', '--obsid', default="")
 parser.add_argument('-f', '--freq', default=None, type=float)
 args = parser.parse_args()
 
@@ -24,8 +24,12 @@ for be in args.backend:
     for p in args.pol:
         hdulist = pyfits.open( glob.glob(
                    join(args.datadir, args.obsid, 'level2',
-                   '{0}-{1}-{2}'.format(be, p, args.sideband.upper()),
+                   '{0}-{1}-{2}'.format(be, p, args.sideband),
                    'box_001', '*.fits*'))[0])
+        for i in hdulist[1].header.ascardlist().keys():
+            if i.find('META_') > 0 and hdulist[1].header[i] == 'loThrow':
+                throw = hdulist[1].header[i[4:]]
+        print throw
         for subband in args.subband:
             if 'flux_{0}'.format(subband) in hdulist[1].data.names:
                 freq = hdulist[1].data.field('{0}frequency_{1}'.format(
@@ -33,6 +37,8 @@ for be in args.backend:
                 flux = hdulist[1].data.field('flux_{0}'.format(subband))[0]
                 plt.plot(freq, flux, drawstyle='steps-mid',
                          label='{0}-{1} subband {2}'.format(be, p, subband))
-if args.freq: plt.axvline(x=args.freq, linestyle='--')
+if args.freq:
+    plt.axvline(x=args.freq, linestyle='--')
+    plt.axvline(x=args.freq-throw, linestyle=':')
 plt.legend()
 plt.show()
