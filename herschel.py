@@ -51,11 +51,10 @@ class HIFISpectrum(object):
             self.flux = self.flux.byteswap().newbyteorder('L')
             self.freq = self.freq.byteswap().newbyteorder('L')
 
-    def save(self, datadir='/tmp', suffix=""):
+    def save(self, filename, flux="flux"):
         """Save spectrum to ASCII file"""
-        np.savetxt(join(datadir, "{}_{}{}.dat".format(
-                    self.obsid, self.backend, suffix)),
-                    np.transpose((self.freq, self.vel, self.flux)))
+        np.savetxt(filename, np.transpose((self.freq, self.vel,
+                    self.__getattribute__(flux))))
 
     def add(self, spectrum):
         if np.all(self.freq == spectrum.freq):
@@ -73,7 +72,7 @@ class HIFISpectrum(object):
     def fold(self):
         freq_list = [self.freq, self.freq + self.throw]
         flux_list = [self.flux, -self.flux]
-        self.freq, self.flux = gildas.averagen(freq_list, flux_list, goodval=False)
+        self.freq, self.flux = gildas.averagen(freq_list, flux_list, goodval=True)
         self.vel = gildas.vel(self.freq, self.freq0)
 
     def scale(self, vel_lim=None):
@@ -83,16 +82,27 @@ class HIFISpectrum(object):
         else:
             self.flux -= np.mean(self.flux)
 
-    def baseline(self):
-        baseflux = self.flux.copy()
-        maskline = np.where(np.abs(self.vel) < 1)
-        maskvel = np.where((np.abs(self.vel) < 3) & (np.abs(self.vel) > 1))
-        velmask = np.where((np.abs(self.vel) < 3))
-        func = np.poly1d(np.polyfit(self.freq[maskvel], baseflux[maskvel], args.deg))
-        baseflux[maskline] = func(self.freq[maskline])
+    def fftbase(self, fftlim, shift=0, linelim=1, baselim=3, plot=False):
+        from scipy import fftpack
+        self.baseflux = self.flux.copy()
+        maskline = np.where(np.abs(self.vel - shift) < linelim)
+        maskvel = np.where((np.abs(self.vel - shift) < baselim) &
+                            (np.abs(self.vel - shift) > linelim))
+        func = np.poly1d(np.polyfit(self.freq[maskvel], self.baseflux[maskvel], 3))
+        self.baseflux[maskline] = func(self.freq[maskline])
 
         # FFT
         sample_freq = fftpack.fftfreq(self.flux.size, d=np.abs(self.freq[0]-self.freq[1]))
-        sig_fft = fftpack.fft(baseflux)
-        sig_fft[np.abs(sample_freq) > args.fftlim] = 0
-        baseline = np.real(fftpack.ifft(sig_fft))
+        sig_fft = fftpack.fft(self.baseflux)
+        sig_fft[np.abs(sample_freq) > fftlim] = 0
+        if args.debug:
+            pidxs = np.where(sample_freq > 0)
+            f = sample_freq[pidxs]
+            pgram = np.abs(sig_fft)[pidxs]
+            plt.loglog(f, pgram)
+            plt.axvline(x=fftlim, linestyle='--')
+            plt.show()
+        self.baseline = np.real(fftpack.ifft(sig_fft))
+        # calibrated flux
+        self.fluxcal = self.flux - self.baseline
+        self.fluxcal *= 0.96/.75
