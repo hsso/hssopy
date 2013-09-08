@@ -1,19 +1,19 @@
 #!/usr/bin/python
 """Misc functions"""
 
-import physcon as pc
+from scipy import constants
 import astrocon as ac
 import numpy as np
 import pyfits
 from os.path import join
 from hsso import gildas
 
-freq = {'H2O': [556.9360020]}
+freq = {'H2O': 556.9359877}
 beameff = [.75]
 
 def fwhm(freq=freq['H2O'], diam=3.5, unit='arcsec'):
     """calculate FWHM"""
-    fwhm = 1.2*pc.c/freq/diam
+    fwhm = 1.2*constants.c/freq/1e9/diam
     if unit=='arcsec': fwhm *= 180/np.pi*3600 # convert rad to arcsec
     return fwhm
 
@@ -31,9 +31,17 @@ def fft(hdulist, sideband, subband):
     flux = hdulist[1].data.field('flux_{0}'.format(subband))[0]
     return freq, flux, throw
 
+def hififits(datadir, obsid, backend, pol, sideband):
+    import glob
+    return glob.glob(
+        join(datadir, str(obsid), 'level2',
+        '{0}-{1}-{2}'.format(backend, pol, sideband),
+        'box_001', '*.fits*'))[0]
+
 class HIFISpectrum(object):
 
     def __init__(self, fitsfile, subband=1, byteswap=True, freq0=556.9359877):
+        from datetime import datetime
         hdus = pyfits.open(fitsfile)
         self.freq0 = freq0
         self.obsid = hdus[0].header['OBS_ID']
@@ -47,6 +55,15 @@ class HIFISpectrum(object):
                                     subband))[0]
         self.flux = hdus[1].data.field('flux_{0}'.format(subband))[0]
         self.vel = gildas.vel(self.freq, freq0)
+        self.ra = hdus[1].data.field('longitude')[0]
+        self.dec = hdus[1].data.field('latitude')[0]
+        self.integration = hdus[1].data.field('integration time')[0]
+        date_obs = hdus[0].header['DATE-OBS']
+        date_end = hdus[0].header['DATE-END']
+        self.start = datetime.strptime(date_obs, "%Y-%m-%dT%H:%M:%S.%f")
+        self.end = datetime.strptime(date_end, "%Y-%m-%dT%H:%M:%S.%f")
+        exp = self.end - self.start
+        self.mid_time = self.start + exp/2
         if byteswap:
             self.flux = self.flux.byteswap().newbyteorder('L')
             self.freq = self.freq.byteswap().newbyteorder('L')
@@ -66,9 +83,6 @@ class HIFISpectrum(object):
             self.freq, self.flux = gildas.averagen(freq_list, flux_list, goodval=True)
             self.vel = gildas.vel(self.freq, self.freq0)
 
-    def __add__(self, spectrum):
-        return self.add(spectrum)
-
     def fold(self):
         freq_list = [self.freq, self.freq + self.throw]
         flux_list = [self.flux, -self.flux]
@@ -82,27 +96,53 @@ class HIFISpectrum(object):
         else:
             self.flux -= np.mean(self.flux)
 
-    def fftbase(self, fftlim, shift=0, linelim=1, baselim=3, plot=False):
+    def fftbase(self, fftlim, line = (0,), shift=0, linelim=1, baselim=3, plot=False):
         from scipy import fftpack
         self.baseflux = self.flux.copy()
-        maskline = np.where(np.abs(self.vel - shift) < linelim)
-        maskvel = np.where((np.abs(self.vel - shift) < baselim) &
-                            (np.abs(self.vel - shift) > linelim))
-        func = np.poly1d(np.polyfit(self.freq[maskvel], self.baseflux[maskvel], 3))
-        self.baseflux[maskline] = func(self.freq[maskline])
+        for l in line:
+            self.maskline = np.where(np.abs(self.vel - l - shift) < linelim)
+            self.maskvel = np.where((np.abs(self.vel - l - shift) < baselim) &
+                                (np.abs(self.vel - l- shift) > linelim))
+            self.func = np.poly1d(np.polyfit(self.freq[self.maskvel],
+                                        self.baseflux[self.maskvel], 3))
+            self.baseflux[self.maskline] = self.func(self.freq[self.maskline])
 
         # FFT
         sample_freq = fftpack.fftfreq(self.flux.size, d=np.abs(self.freq[0]-self.freq[1]))
         sig_fft = fftpack.fft(self.baseflux)
-        sig_fft[np.abs(sample_freq) > fftlim] = 0
-        if args.debug:
+        if plot:
+            import matplotlib.pyplot as plt
             pidxs = np.where(sample_freq > 0)
             f = sample_freq[pidxs]
             pgram = np.abs(sig_fft)[pidxs]
             plt.loglog(f, pgram)
             plt.axvline(x=fftlim, linestyle='--')
             plt.show()
+        sig_fft[np.abs(sample_freq) > fftlim] = 0
         self.baseline = np.real(fftpack.ifft(sig_fft))
         # calibrated flux
         self.fluxcal = self.flux - self.baseline
         self.fluxcal *= 0.96/.75
+
+    def plot(self, twiny=True):
+        import matplotlib.pyplot as plt
+        plt.plot(self.freq, self.flux,  drawstyle='steps-mid')
+        plt.plot(self.freq, self.baseline)
+        plt.plot(self.freq[self.maskvel], self.func(self.freq[self.maskvel]))
+        plt.axvline(x=self.freq0, linestyle='--')
+        plt.grid(axis='both')
+        if twiny:
+            ax1 = plt.gca()
+            # update xlim of ax2
+            ax2 = ax1.twiny()
+            x1, x2 = ax1.get_xlim()
+            ax2.set_xlim(gildas.vel(x1, self.freq0),
+                         gildas.vel(x2, self.freq0))
+        plt.show()
+
+def writeto_fits(filename, columns):
+    cols = []
+    for i, j in columns.iteritems():
+        cols.append(pyfits.Column(name=i, format='E', array=j))
+    tbhdu = pyfits.new_table(pyfits.ColDefs(cols))
+    tbhdu.writeto(filename)
