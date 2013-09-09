@@ -68,11 +68,6 @@ class HIFISpectrum(object):
             self.flux = self.flux.byteswap().newbyteorder('L')
             self.freq = self.freq.byteswap().newbyteorder('L')
 
-    def save(self, filename, flux="flux"):
-        """Save spectrum to ASCII file"""
-        np.savetxt(filename, np.transpose((self.freq, self.vel,
-                    self.__getattribute__(flux))))
-
     def add(self, spectrum):
         if np.all(self.freq == spectrum.freq):
             self.flux += spectrum.flux
@@ -124,13 +119,19 @@ class HIFISpectrum(object):
         self.fluxcal = self.flux - self.baseline
         self.fluxcal *= 0.96/.75
 
-    def plot(self, twiny=True):
+    def plot(self, flux="flux", twiny=True):
         import matplotlib.pyplot as plt
-        plt.plot(self.freq, self.flux,  drawstyle='steps-mid')
-        plt.plot(self.freq, self.baseline)
-        plt.plot(self.freq[self.maskvel], self.func(self.freq[self.maskvel]))
+        plt.plot(self.freq, self.__getattribute__(flux),  drawstyle='steps-mid')
+        if flux=="flux": plt.plot(self.freq, self.baseline)
+        try:
+            plt.plot(self.freq[self.maskvel], self.func(self.freq[self.maskvel]))
+        except AttributeError:
+            pass
         plt.axvline(x=self.freq0, linestyle='--')
+        plt.ylabel('$T_{\mathrm{mB}}$ [K]')
+        plt.xlabel(r'$\nu$ [GHz]')
         plt.grid(axis='both')
+        plt.autoscale(axis='x', tight=True)
         if twiny:
             ax1 = plt.gca()
             # update xlim of ax2
@@ -138,7 +139,22 @@ class HIFISpectrum(object):
             x1, x2 = ax1.get_xlim()
             ax2.set_xlim(gildas.vel(x1, self.freq0),
                          gildas.vel(x2, self.freq0))
+            plt.xlabel('$v$ [km s$^{-1}$]')
         plt.show()
+
+    def save(self, filename, flux="flux"):
+        """Save spectrum to ASCII file"""
+        np.savetxt(filename, np.transpose((self.freq, self.vel,
+                    self.__getattribute__(flux))))
+
+    def tofits(self, filename, columns=("freq", "fluxcal")):
+        """Save spectrum to FITS file"""
+        cols = []
+        for i in columns:
+            cols.append(pyfits.Column(name=i, format='E',
+                        array=self.__getattribute__(i)))
+        tbhdu = pyfits.new_table(pyfits.ColDefs(cols))
+        tbhdu.writeto(filename, clobber=True)
 
 def writeto_fits(filename, columns):
     cols = []
