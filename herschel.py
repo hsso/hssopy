@@ -119,10 +119,15 @@ class HIFISpectrum(object):
         self.fluxcal = self.flux - self.baseline
         self.fluxcal *= 0.96/.75
 
-    def plot(self, flux="flux", twiny=True):
+    def plot(self, flux="flux", twiny=True, filename=None, lim=None):
         import matplotlib.pyplot as plt
-        plt.plot(self.freq, self.__getattribute__(flux),  drawstyle='steps-mid')
-        if flux=="flux": plt.plot(self.freq, self.baseline)
+        if lim:
+            sl = slice(lim, -lim)
+        else:
+            sl = slice(0, -1)
+        plt.plot(self.freq[sl], self.__getattribute__(flux)[sl],
+                drawstyle='steps-mid')
+        if flux=="flux": plt.plot(self.freq[sl], self.baseline[sl])
         try:
             plt.plot(self.freq[self.maskvel], self.func(self.freq[self.maskvel]))
         except AttributeError:
@@ -140,7 +145,10 @@ class HIFISpectrum(object):
             ax2.set_xlim(gildas.vel(x1, self.freq0),
                          gildas.vel(x2, self.freq0))
             plt.xlabel('$v$ [km s$^{-1}$]')
-        plt.show()
+        if filename:
+            plt.savefig(filename)
+        else:
+            plt.show()
 
     def save(self, filename, flux="flux"):
         """Save spectrum to ASCII file"""
