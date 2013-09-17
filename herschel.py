@@ -55,6 +55,7 @@ class HIFISpectrum(object):
                                     subband))[0]
         self.flux = hdus[1].data.field('flux_{0}'.format(subband))[0]
         self.vel = gildas.vel(self.freq, freq0)
+        self.throwvel = gildas.vel(self.freq0+self.throw, freq0)
         self.ra = hdus[1].data.field('longitude')[0]
         self.dec = hdus[1].data.field('latitude')[0]
         self.integration = hdus[1].data.field('integration time')[0]
@@ -133,6 +134,7 @@ class HIFISpectrum(object):
         except AttributeError:
             pass
         plt.axvline(x=self.freq0, linestyle='--')
+        if hasattr(self, 'throw'): plt.axvline(x=self.freq0-self.throw, linestyle='dotted')
         plt.ylabel('$T_{\mathrm{mB}}$ [K]')
         plt.xlabel(r'$\nu$ [GHz]')
         plt.grid(axis='both')
