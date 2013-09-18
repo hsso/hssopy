@@ -55,7 +55,7 @@ class HIFISpectrum(object):
                                     subband))[0]
         self.flux = hdus[1].data.field('flux_{0}'.format(subband))[0]
         self.vel = gildas.vel(self.freq, freq0)
-        self.throwvel = gildas.vel(self.freq0+self.throw, freq0)
+        self.throwvel = gildas.vel(self.freq0-self.throw, freq0)
         self.ra = hdus[1].data.field('longitude')[0]
         self.dec = hdus[1].data.field('latitude')[0]
         self.integration = hdus[1].data.field('integration time')[0]
@@ -92,16 +92,23 @@ class HIFISpectrum(object):
         else:
             self.flux -= np.mean(self.flux)
 
-    def fftbase(self, fftlim, line = (0,), shift=0, linelim=1, baselim=3, plot=False):
+    def mask(self, line, shift, linelim, baselim):
+        maskline = np.where(np.abs(self.vel - line - shift) < linelim)
+        maskvel = np.where((np.abs(self.vel - line - shift) < baselim) &
+                                (np.abs(self.vel - line - shift) > linelim))
+        func = np.poly1d(np.polyfit(self.freq[maskvel],
+                                self.baseflux[maskvel], 3))
+        return maskline, maskvel, func
+
+    def fftbase(self, fftlim, line=(0,), shift=0, linelim=1, baselim=3, plot=False, throw=False):
         from scipy import fftpack
         self.baseflux = self.flux.copy()
-        for l in line:
-            self.maskline = np.where(np.abs(self.vel - l - shift) < linelim)
-            self.maskvel = np.where((np.abs(self.vel - l - shift) < baselim) &
-                                (np.abs(self.vel - l- shift) > linelim))
-            self.func = np.poly1d(np.polyfit(self.freq[self.maskvel],
-                                        self.baseflux[self.maskvel], 3))
-            self.baseflux[self.maskline] = self.func(self.freq[self.maskline])
+        maskline, self.maskvel, self.func = self.mask(line[0], shift, linelim, baselim)
+        self.baseflux[maskline] = self.func(self.freq[maskline])
+        if hasattr(self, 'throwvel'):
+            maskline, self.maskvelthrow, self.functh = self.mask(self.throwvel,
+                                                        shift, linelim, baselim)
+            self.baseflux[maskline] = self.functh(self.freq[maskline])
 
         # FFT
         sample_freq = fftpack.fftfreq(self.flux.size, d=np.abs(self.freq[0]-self.freq[1]))
@@ -128,9 +135,12 @@ class HIFISpectrum(object):
             sl = slice(0, -1)
         plt.plot(self.freq[sl], self.__getattribute__(flux)[sl],
                 drawstyle='steps-mid')
-        if flux=="flux": plt.plot(self.freq[sl], self.baseline[sl])
+        if flux=="flux":
+            plt.plot(self.freq[sl], self.baseline[sl])
         try:
-            plt.plot(self.freq[self.maskvel], self.func(self.freq[self.maskvel]))
+            plt.plot(self.freq[self.maskvel], self.func(self.freq[self.maskvel]), 'red')
+            plt.plot(self.freq[self.maskvelthrow],
+                    self.functh(self.freq[self.maskvelthrow]), 'red')
         except AttributeError:
             pass
         plt.axvline(x=self.freq0, linestyle='--')
