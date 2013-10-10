@@ -154,7 +154,7 @@ class HIFISpectrum(object):
             plt.plot(self.freq[self.maskvel], self.func(self.freq[self.maskvel]), 'red')
             plt.plot(self.freq[self.maskvelthrow],
                     self.functh(self.freq[self.maskvelthrow]), 'red')
-        except AttributeError:
+        except (AttributeError, IndexError):
             pass
         plt.axvline(x=self.freq0, linestyle='--')
         if hasattr(self, 'throw'): plt.axvline(x=self.freq0-self.throw, linestyle='dotted')
