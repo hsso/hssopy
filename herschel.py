@@ -87,9 +87,11 @@ class HIFISpectrum(object):
 
     def resample(self, times=2):
         from scipy.signal import resample
-        for attr in ('freq', 'vel', 'flux', 'fluxcal'):
-            tmp = self.__getattribute__(attr) 
-            setattr(self, attr, resample(tmp, len(tmp)/times))
+        self.flux, self.freq = resample(self.flux, len(self.flux)/times,
+                                        t=self.freq)
+        self.fluxcal, self.vel = resample(self.fluxcal,
+                                        len(self.fluxcal)/times,
+                                        t=self.vel)
 
     def scale(self, vel_lim=None):
         if vel_lim:
