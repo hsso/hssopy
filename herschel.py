@@ -85,6 +85,12 @@ class HIFISpectrum(object):
         self.freq, self.flux = gildas.averagen(freq_list, flux_list, goodval=True)
         self.vel = gildas.vel(self.freq, self.freq0)
 
+    def resample(self, times=2):
+        from scipy.signal import resample
+        for attr in ('freq', 'vel', 'flux', 'fluxcal'):
+            tmp = self.__getattribute__(attr) 
+            setattr(self, attr, resample(tmp, len(tmp)/times))
+
     def scale(self, vel_lim=None):
         if vel_lim:
             maskvel = np.where((self.vel < vel_lim[1]) & (self.vel > vel_lim[0]))
@@ -100,15 +106,17 @@ class HIFISpectrum(object):
                                 self.baseflux[maskvel], 3))
         return maskline, maskvel, func
 
-    def fftbase(self, fftlim, line=(0,), shift=0, linelim=1, baselim=3, plot=False, throw=False):
+    def fftbase(self, fftlim, line=(0,), shift=0, linelim=1, baselim=3,
+                plot=False, throw=False):
+        """Fit baseline ufing FFT"""
         from scipy import fftpack
         self.baseflux = self.flux.copy()
         maskline, self.maskvel, self.func = self.mask(line[0], shift, linelim, baselim)
         self.baseflux[maskline] = self.func(self.freq[maskline])
-        if hasattr(self, 'throwvel'):
-            maskline, self.maskvelthrow, self.functh = self.mask(self.throwvel,
-                                                        shift, linelim, baselim)
-            self.baseflux[maskline] = self.functh(self.freq[maskline])
+#         if hasattr(self, 'throwvel'):
+#             maskline, self.maskvelthrow, self.functh = self.mask(self.throwvel,
+#                                                         shift, linelim, baselim)
+#             self.baseflux[maskline] = self.functh(self.freq[maskline])
 
         # FFT
         sample_freq = fftpack.fftfreq(self.flux.size, d=np.abs(self.freq[0]-self.freq[1]))
@@ -126,6 +134,9 @@ class HIFISpectrum(object):
         # calibrated flux
         self.fluxcal = self.flux - self.baseline
         self.fluxcal *= 0.96/.75
+        self.intens, self.error = gildas.intens(self.fluxcal, self.vel,
+                                                (-linelim, linelim))
+        self.snr = self.intens/self.error
 
     def plot(self, flux="flux", twiny=True, filename=None, lim=None):
         import matplotlib.pyplot as plt
