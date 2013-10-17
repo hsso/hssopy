@@ -51,8 +51,8 @@ class HIFISpectrum(object):
                 self.throw = hdus[1].header[i[4:]]
             elif hdus[1].header[i] == 'sideband':
                 self.sideband = hdus[1].header[i[4:]]
-        self.freq = hdus[1].data.field('{0}frequency_{1}'.format(self.sideband.lower(),
-                                    subband))[0]
+        self.freq = hdus[1].data.field('{0}frequency_{1}'.format(
+                    self.sideband.lower(), subband))[0]
         self.flux = hdus[1].data.field('flux_{0}'.format(subband))[0]
         self.vel = gildas.vel(self.freq, freq0)
         self.throwvel = gildas.vel(self.freq0-self.throw, freq0)
@@ -76,13 +76,15 @@ class HIFISpectrum(object):
         else:
             freq_list = [self.freq, spectrum.freq]
             flux_list = [self.flux, spectrum.flux]
-            self.freq, self.flux = gildas.averagen(freq_list, flux_list, goodval=True)
+            self.freq, self.flux = gildas.averagen(freq_list, flux_list,
+                    goodval=True)
             self.vel = gildas.vel(self.freq, self.freq0)
 
     def fold(self):
         freq_list = [self.freq, self.freq + self.throw]
         flux_list = [self.flux, -self.flux]
-        self.freq, self.flux = gildas.averagen(freq_list, flux_list, goodval=True)
+        self.freq, self.flux = gildas.averagen(freq_list, flux_list,
+                goodval=True)
         self.vel = gildas.vel(self.freq, self.freq0)
 
     def resample(self, times=2):
@@ -95,7 +97,8 @@ class HIFISpectrum(object):
 
     def scale(self, vel_lim=None):
         if vel_lim:
-            maskvel = np.where((self.vel < vel_lim[1]) & (self.vel > vel_lim[0]))
+            maskvel = np.where((self.vel < vel_lim[1]) &
+                                (self.vel > vel_lim[0]))
             self.flux -= np.mean(self.flux[maskvel])
         else:
             self.flux -= np.mean(self.flux)
@@ -114,7 +117,8 @@ class HIFISpectrum(object):
         from scipy import fftpack
         self.baseflux = self.flux.copy()
         if line:
-            maskline, self.maskvel, self.func = self.mask(line[0], shift, linelim, baselim)
+            maskline, self.maskvel, self.func = self.mask(line[0], shift,
+                    linelim, baselim)
             self.baseflux[maskline] = self.func(self.freq[maskline])
             if hasattr(self, 'throwvel'):
                 maskline, self.maskvelthrow, self.functh = self.mask(
@@ -122,7 +126,8 @@ class HIFISpectrum(object):
                 self.baseflux[maskline] = self.functh(self.freq[maskline])
 
         # FFT
-        sample_freq = fftpack.fftfreq(self.flux.size, d=np.abs(self.freq[0]-self.freq[1]))
+        sample_freq = fftpack.fftfreq(self.flux.size,
+                    d=np.abs(self.freq[0]-self.freq[1]))
         sig_fft = fftpack.fft(self.baseflux)
         if plot:
             import matplotlib.pyplot as plt
@@ -152,13 +157,15 @@ class HIFISpectrum(object):
         if flux=="flux":
             plt.plot(self.freq[sl], self.baseline[sl])
         try:
-            plt.plot(self.freq[self.maskvel], self.func(self.freq[self.maskvel]), 'red')
+            plt.plot(self.freq[self.maskvel],
+                        self.func(self.freq[self.maskvel]), 'red')
             plt.plot(self.freq[self.maskvelthrow],
-                    self.functh(self.freq[self.maskvelthrow]), 'red')
+                        self.functh(self.freq[self.maskvelthrow]), 'red')
         except (AttributeError, IndexError):
             pass
         plt.axvline(x=self.freq0, linestyle='--')
-        if hasattr(self, 'throw'): plt.axvline(x=self.freq0-self.throw, linestyle='dotted')
+        if hasattr(self, 'throw'):
+            plt.axvline(x=self.freq0-self.throw, linestyle='dotted')
         plt.ylabel('$T_{\mathrm{mB}}$ [K]')
         plt.xlabel(r'$\nu$ [GHz]')
         plt.grid(axis='both')
