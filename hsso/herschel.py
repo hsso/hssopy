@@ -144,7 +144,7 @@ class HifiMap(object):
                         (self.latitudes - yi[j])**2)
                 flux = np.average(self.spec, weights=norm.pdf(dist, 0,
                             self.sigma), axis=0)
-                zi[i,j] = gildas.intens(flux, vel, [-.5, 1.])[0]
+                zi[i,j] = gildas.intens(flux, vel, [-.1, 1.])[0]
         return xi, yi, zi
 
     def griddata(self, ncell):
