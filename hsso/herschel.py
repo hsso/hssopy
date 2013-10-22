@@ -62,14 +62,13 @@ class HifiMap(object):
     """Calculate line intensity map and coordinates"""
 
     def __init__(self):
-        self.longitudes = []
-        self.latitudes = []
-        self.spec = []
-        self.midtime = []
-        self.fvals = []
+        self.longitudes = np.array([])
+        self.latitudes = np.array([])
+        self.spec = np.array([])
+        self.midtime = np.array([])
+        self.fvals = np.array([])
 
-    def add(self, filename, freq0, sideband='USB', subband=1,
-            horizons=expanduser("~/HssO/Hartley2/python/horizons.txt")):
+    def add(self, filename, freq0, sideband='USB', subband=1):
         self.filename = filename
         # read HSA FITS file
         hdulist = pyfits.open(filename)
@@ -82,28 +81,30 @@ class HifiMap(object):
                 # if the integration time is not a scalar
                 if not isinstance(integration_time, float):
                     integration_time = integration_time[subband-1]
-                self.midtime.append(datetime(year=1958, month=1, day=1)\
-                    +timedelta(microseconds=hdu.data.field('obs time')[k]\
-                    +integration_time/2.))
+                self.midtime = np.append(self.midtime,
+                    datetime(year=1958, month=1, day=1) +
+                    timedelta(microseconds=hdu.data.field('obs time')[k] +
+                    integration_time/2.))
                 # interpolate and subtract ra and dec of the comet
-                self.longitudes.append(hdu.data.field('longitude')[k])
-                self.latitudes.append(hdu.data.field('latitude')[k])
+                self.longitudes = np.append(self.longitudes,
+                        hdu.data.field('longitude')[k])
+                self.latitudes = np.append(self.latitudes,
+                        hdu.data.field('latitude')[k])
                 # read frequency and flux
                 freq = hdu.data.field('{0}frequency_{1}'.format(
                     sideband.lower(), subband))[k]
                 flux = hdu.data.field('flux_{0}'.format(subband))[k]
-                self.spec.append(flux)
+#                 self.spec = np.append(self.spec, flux)
                 vel = gildas.vel(freq, freq0)
                 # subtract baseline
                 basep = gildas.basepoly(vel, flux, [1.4, 5], deg=1)
                 flux -= basep(vel)
                 # define line intensity map
-                self.fvals.append(gildas.intens(flux, vel, [-.5, .5])[0])
-        self.longitudes = np.array(self.longitudes)
-        self.latitudes = np.array(self.latitudes)
-        self.fvals = np.array(self.fvals)
+                self.fvals = np.append(self.fvals,
+                                gildas.intens(flux, vel, [-.5, .5])[0])
 
-    def correct(self):
+    def correct(self,
+            horizons=expanduser("~/HssO/Hartley2/python/horizons.txt")):
         self.longitudes -= np.vectorize(gildas.deltadot)(self.midtime,
                 filename=horizons, column=2)
         self.longitudes *= np.cos(self.latitudes * math.pi / 180.)
