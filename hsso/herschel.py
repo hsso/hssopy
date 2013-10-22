@@ -102,14 +102,16 @@ class HifiMap(object):
                 flux -= basep(vel)
                 # define line intensity map
                 self.fvals.append(gildas.intens(flux, vel, [-.5, .5])[0])
+        self.longitudes = np.array(self.longitudes)
+        self.latitudes = np.array(self.latitudes)
+        self.fvals = np.array(self.fvals)
 
     def grid(self):
         # grid the data to a uniform grid
-        xi = np.linspace(longitudes.min(), longitudes.max(), 40)
-        yi = np.linspace(latitudes.min(), latitudes.max(), 40)
-        zi = interpolate.griddata((longitudes.flatten(), latitudes.flatten()),
-            hifimap.fvals.flatten()/.75, (xi[None,:], yi[:,None]),
-            method='cubic')
+        self.xi = np.linspace(self.longitudes.min(), self.longitudes.max(), 40)
+        self.yi = np.linspace(self.latitudes.min(), self.latitudes.max(), 40)
+        self.zi = interpolate.griddata((self.longitudes, self.latitudes),
+            hifimap.fvals/.75, (xi[None,:], yi[:,None]), method='cubic')
 
 def hifimap(filename, freq0, sideband='USB', subband=1, obsid=1, correct=True):
     """Calculate intensity and coordinates"""
