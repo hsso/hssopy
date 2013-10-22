@@ -61,18 +61,20 @@ def finetime(microseconds):
 class HifiMap(object):
     """Calculate line intensity map and coordinates"""
 
-    def __init__(self, filename, freq0, sideband='USB', subband=1, correct=True,
+    def __init__(self):
+        self.longitudes = []
+        self.latitudes = []
+        self.spec = []
+        self.midtime = []
+        self.fvals = []
+
+    def add(self, filename, freq0, sideband='USB', subband=1,
             horizons=expanduser("~/HssO/Hartley2/python/horizons.txt")):
         self.filename = filename
         # read HSA FITS file
         hdulist = pyfits.open(filename)
         self.ntables = len(hdulist)
         self.npoints = hdulist[1].data.field('flux_1').shape[0]
-        self.longitudes = []
-        self.latitudes = []
-        self.spec = []
-        self.midtime = []
-        self.fvals = []
         for hdu in hdulist[1:]:
             for k in range(hdu.data.field('flux_1').shape[0]):
                 # mid-date observing time in UT
@@ -90,6 +92,7 @@ class HifiMap(object):
                 freq = hdu.data.field('{0}frequency_{1}'.format(
                     sideband.lower(), subband))[k]
                 flux = hdu.data.field('flux_{0}'.format(subband))[k]
+                self.spec.append(flux)
                 vel = gildas.vel(freq, freq0)
                 # subtract baseline
                 basep = gildas.basepoly(vel, flux, [1.4, 5], deg=1)
@@ -99,12 +102,13 @@ class HifiMap(object):
         self.longitudes = np.array(self.longitudes)
         self.latitudes = np.array(self.latitudes)
         self.fvals = np.array(self.fvals)
-        if correct:
-            self.longitudes -= np.vectorize(gildas.deltadot)(self.midtime,
-                    filename=horizons, column=2)
-            self.longitudes *= np.cos(self.latitudes * math.pi / 180.)
-            self.latitudes -= np.vectorize(gildas.deltadot)(self.midtime,
-                    filename=horizons, column=3)
+
+    def correct(self):
+        self.longitudes -= np.vectorize(gildas.deltadot)(self.midtime,
+                filename=horizons, column=2)
+        self.longitudes *= np.cos(self.latitudes * math.pi / 180.)
+        self.latitudes -= np.vectorize(gildas.deltadot)(self.midtime,
+                filename=horizons, column=3)
         # convert degrees to arcsec
         self.longitudes *= 3600
         self.latitudes *= 3600
