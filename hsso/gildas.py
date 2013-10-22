@@ -210,7 +210,8 @@ def vshift(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5], rmserror=None):
             np.sum(flux[mask])**2 * rmserror
     return np.average(vel[mask], weights=flux[mask])*1e3, stderr*1e3
 
-def deltadot(middate, filename="/home/miguel/HssO/Wild2/horizons.txt", column=5):
+def deltadot(middate, filename="/home/miguel/HssO/Wild2/horizons.txt",
+            column=5):
     """calculate a quantity from JPL horizons at mid-point of the exposures
 
     input:
@@ -221,7 +222,7 @@ def deltadot(middate, filename="/home/miguel/HssO/Wild2/horizons.txt", column=5)
     # read year, month, day and hour minute from the table
     ymd, hm = np.loadtxt(filename, dtype='S', usecols=(0,1), unpack=True)
     ymdhm = np.core.defchararray.add(ymd, hm)
-    # read quantity from JPL Horizons ephemris file
+    # read quantity from JPL Horizons ephemeris file
     vdot = np.loadtxt(filename, usecols=(column,), unpack=True)
     datenum = [date2num(datetime.strptime(i, "%Y-%b-%d%H:%M")) for i in ymdhm]
     # 1D interpolation
