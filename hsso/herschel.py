@@ -71,6 +71,7 @@ class HifiMap(object):
         self.longitudes = []
         self.latitudes = []
         self.spec = []
+        self.midtime = []
         self.fvals = []
         for hdu in hdulist[1:]:
             for k in range(hdu.data.field('flux_1').shape[0]):
@@ -79,19 +80,12 @@ class HifiMap(object):
                 # if the integration time is not a scalar
                 if not isinstance(integration_time, float):
                     integration_time = integration_time[subband-1]
-                timestr = datetime(year=1958, month=1, day=1)\
+                self.midtime.append(datetime(year=1958, month=1, day=1)\
                     +timedelta(microseconds=hdu.data.field('obs time')[k]\
-                    +integration_time/2.)
+                    +integration_time/2.))
                 # interpolate and subtract ra and dec of the comet
-                lon = hdu.data.field('longitude')[k]
-                lat = hdu.data.field('latitude')[k]
-                if correct:
-                    lon -= gildas.deltadot(timestr, filename=horizons,
-                            column=2)
-                    lon *= np.cos(lat * math.pi / 180.)
-                    lat -= gildas.deltadot(timestr, filename=horizons, column=3)
-                self.longitudes.append(lon)
-                self.latitudes.append(lat)
+                self.longitudes.append(hdu.data.field('longitude')[k])
+                self.latitudes.append(hdu.data.field('latitude')[k])
                 # read frequency and flux
                 freq = hdu.data.field('{0}frequency_{1}'.format(
                     sideband.lower(), subband))[k]
@@ -105,6 +99,12 @@ class HifiMap(object):
         self.longitudes = np.array(self.longitudes)
         self.latitudes = np.array(self.latitudes)
         self.fvals = np.array(self.fvals)
+        if correct:
+            self.longitudes -= np.vectorize(gildas.deltadot)(self.midtime,
+                    filename=horizons, column=2)
+            self.longitudes *= np.cos(self.latitudes * math.pi / 180.)
+            self.latitudes -= np.vectorize(gildas.deltadot)(self.midtime,
+                    filename=horizons, column=3)
 
     def grid(self):
         # grid the data to a uniform grid
