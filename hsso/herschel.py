@@ -68,39 +68,48 @@ class HifiMap(object):
         hdulist = pyfits.open(filename)
         self.ntables = len(hdulist)
         self.npoints = hdulist[1].data.field('flux_1').shape[0]
-        self.longitudes = np.zeros((self.ntables-1, self.npoints))
-        self.latitudes = np.zeros((self.ntables-1, self.npoints))
-        self.fvals = np.zeros((self.ntables-1, self.npoints))
-        for j in range(1, self.ntables):
-            for k in range(self.npoints):
+        self.longitudes = []
+        self.latitudes = []
+        self.spec = []
+        self.fvals = []
+        for hdu in hdulist[1:]:
+            for k in range(hdu.data.field('flux_1').shape[0]):
                 # mid-date observing time in UT
-                integration_time = hdulist[j].data.field('integration time')[k]
+                integration_time = hdu.data.field('integration time')[k]
                 # if the integration time is not a scalar
                 if not isinstance(integration_time, float):
                     integration_time = integration_time[subband-1]
                 timestr = datetime(year=1958, month=1, day=1)\
-                    +timedelta(microseconds=hdulist[j].data.field('obs time')[k]\
+                    +timedelta(microseconds=hdu.data.field('obs time')[k]\
                     +integration_time/2.)
                 # interpolate and subtract ra and dec of the comet
-                self.longitudes[j-1,k] = hdulist[j].data.field('longitude')[k] 
-                self.latitudes[j-1,k] = hdulist[j].data.field('latitude')[k] 
+                lon = hdu.data.field('longitude')[k]
+                lat = hdu.data.field('latitude')[k]
                 if correct:
-                    self.longitudes[j-1,k] -=  gildas.deltadot(timestr,
-                        filename=horizons, column=2)
-                    self.longitudes[j-1,k] *= np.cos(self.latitudes[j-1,k] *
-                        math.pi / 180.)
-                    self.latitudes[j-1,k] -= gildas.deltadot(timestr,
-                        filename=horizons, column=3)
+                    lon -= gildas.deltadot(timestr, filename=horizons,
+                            column=2)
+                    lon *= np.cos(lat * math.pi / 180.)
+                    lat -= gildas.deltadot(timestr, filename=horizons, column=3)
+                self.longitudes.append(lon)
+                self.latitudes.append(lat)
                 # read frequency and flux
-                freq = hdulist[j].data.field('{0}frequency_{1}'.format(
+                freq = hdu.data.field('{0}frequency_{1}'.format(
                     sideband.lower(), subband))[k]
-                flux = hdulist[j].data.field('flux_{0}'.format(subband))[k]
+                flux = hdu.data.field('flux_{0}'.format(subband))[k]
                 vel = gildas.vel(freq, freq0)
                 # subtract baseline
                 basep = gildas.basepoly(vel, flux, [1.4, 5], deg=1)
                 flux -= basep(vel)
                 # define line intensity map
-                self.fvals[j-1, k] = gildas.intens(flux, vel, [-.5, .5])[0]
+                self.fvals.append(gildas.intens(flux, vel, [-.5, .5])[0])
+
+    def grid(self):
+        # grid the data to a uniform grid
+        xi = np.linspace(longitudes.min(), longitudes.max(), 40)
+        yi = np.linspace(latitudes.min(), latitudes.max(), 40)
+        zi = interpolate.griddata((longitudes.flatten(), latitudes.flatten()),
+            hifimap.fvals.flatten()/.75, (xi[None,:], yi[:,None]),
+            method='cubic')
 
 def hifimap(filename, freq0, sideband='USB', subband=1, obsid=1, correct=True):
     """Calculate intensity and coordinates"""
