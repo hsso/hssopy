@@ -39,6 +39,9 @@ def fwhm(freq=freq['H2O'][0]*1e9, diam=3.5, unit='arcsec'):
     if unit=='arcsec': fwhm *= 180/math.pi*3600 # convert rad to arcsec
     return fwhm
 
+def sigma(fwhm):
+    return fwhm/(2.*np.sqrt(2*np.log(2)))
+
 def size(arcsec, delta=1):
     """Calculate projected beam size at the comet in km
     
@@ -73,6 +76,7 @@ class HifiMap(object):
         hdulist = pyfits.open(filename)
         self.ntables = len(hdulist)
         self.npoints = hdulist[1].data.field('flux_1').shape[0]
+        self.sigma = sigma(fwhm(freq=freq0*1e9))
         for hdu in hdulist[1:]:
             for k in range(hdu.data.field('flux_1').shape[0]):
                 # mid-date observing time in UT
@@ -106,12 +110,12 @@ class HifiMap(object):
                     self.vel = np.vstack((self.vel, vel[mask]))
                 # define line intensity map
                 self.fvals = np.append(self.fvals,
-                                gildas.intens(flux, vel, [-.5, .5])[0])
+                                gildas.intens(flux, vel, [-.5, 1.])[0])
 
     def plot(self):
         import matplotlib.pyplot as plt
         for i,j in zip(self.vel, self.spec):
-            plt.plot(i, j, ds="steps-mid")
+            plt.plot(i, j, drawstyle="steps-mid")
         plt.show()
 
     def correct(self,
@@ -126,8 +130,26 @@ class HifiMap(object):
         self.latitudes *= 3600
 
     def grid(self, ncell):
+        """grid the data to a uniform grid using Gaussian kernel weights"""
         from scipy import interpolate
-        # grid the data to a uniform grid
+        from scipy.stats import norm
+        import matplotlib.pyplot as plt
+        xi = np.linspace(self.longitudes.min(), self.longitudes.max(), ncell)
+        yi = np.linspace(self.latitudes.min(), self.latitudes.max(), ncell)
+        zi = np.zeros((ncell, ncell))
+        vel = np.average(self.vel, axis=0)
+        for i in range(ncell):
+            for j in range(ncell):
+                dist = np.sqrt((self.longitudes - xi[i])**2 +
+                        (self.latitudes - yi[j])**2)
+                flux = np.average(self.spec, weights=norm.pdf(dist, 0,
+                            self.sigma), axis=0)
+                zi[i,j] = gildas.intens(flux, vel, [-.5, 1.])[0]
+        return xi, yi, zi
+
+    def griddata(self, ncell):
+        """grid the data to a uniform grid using interpolate.griddata"""
+        from scipy import interpolate
         xi = np.linspace(self.longitudes.min(), self.longitudes.max(), ncell)
         yi = np.linspace(self.latitudes.min(), self.latitudes.max(), ncell)
         zi = interpolate.griddata((self.longitudes, self.latitudes),
