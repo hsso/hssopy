@@ -105,13 +105,18 @@ class HifiMap(object):
             self.longitudes *= np.cos(self.latitudes * math.pi / 180.)
             self.latitudes -= np.vectorize(gildas.deltadot)(self.midtime,
                     filename=horizons, column=3)
+        # convert degrees to arcsec
+        self.longitudes *= 3600
+        self.latitudes *= 3600
 
-    def grid(self):
+    def grid(self, ncell):
+        from scipy import interpolate
         # grid the data to a uniform grid
-        self.xi = np.linspace(self.longitudes.min(), self.longitudes.max(), 40)
-        self.yi = np.linspace(self.latitudes.min(), self.latitudes.max(), 40)
-        self.zi = interpolate.griddata((self.longitudes, self.latitudes),
-            hifimap.fvals/.75, (xi[None,:], yi[:,None]), method='cubic')
+        xi = np.linspace(self.longitudes.min(), self.longitudes.max(), ncell)
+        yi = np.linspace(self.latitudes.min(), self.latitudes.max(), ncell)
+        zi = interpolate.griddata((self.longitudes, self.latitudes),
+            self.fvals/.75, (xi[None,:], yi[:,None]), method='cubic')
+        return xi, yi, zi
 
 def hifimap(filename, freq0, sideband='USB', subband=1, obsid=1, correct=True):
     """Calculate intensity and coordinates"""
