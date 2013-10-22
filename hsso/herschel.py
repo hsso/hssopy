@@ -64,7 +64,6 @@ class HifiMap(object):
     def __init__(self):
         self.longitudes = np.array([])
         self.latitudes = np.array([])
-        self.spec = np.array([])
         self.midtime = np.array([])
         self.fvals = np.array([])
 
@@ -94,14 +93,26 @@ class HifiMap(object):
                 freq = hdu.data.field('{0}frequency_{1}'.format(
                     sideband.lower(), subband))[k]
                 flux = hdu.data.field('flux_{0}'.format(subband))[k]
-#                 self.spec = np.append(self.spec, flux)
                 vel = gildas.vel(freq, freq0)
                 # subtract baseline
                 basep = gildas.basepoly(vel, flux, [1.4, 5], deg=1)
                 flux -= basep(vel)
+                mask = [np.abs(vel) < 5]
+                if not hasattr(self, "spec"):
+                    self.spec = flux[mask]
+                    self.vel = vel[mask]
+                else:
+                    self.spec = np.vstack((self.spec, flux[mask]))
+                    self.vel = np.vstack((self.vel, vel[mask]))
                 # define line intensity map
                 self.fvals = np.append(self.fvals,
                                 gildas.intens(flux, vel, [-.5, .5])[0])
+
+    def plot(self):
+        import matplotlib.pyplot as plt
+        for i,j in zip(self.vel, self.spec):
+            plt.plot(i, j, ds="steps-mid")
+        plt.show()
 
     def correct(self,
             horizons=expanduser("~/HssO/Hartley2/python/horizons.txt")):
