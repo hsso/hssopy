@@ -68,6 +68,7 @@ class HifiMap(object):
         self.longitudes = np.array([])
         self.latitudes = np.array([])
         self.midtime = np.array([])
+        self.start = np.array([])
         self.fvals = np.array([])
 
     def add(self, filename, freq0, sideband='USB', subband=1):
@@ -88,6 +89,9 @@ class HifiMap(object):
                     datetime(year=1958, month=1, day=1) +
                     timedelta(microseconds=hdu.data.field('obs time')[k] +
                     integration_time/2.))
+                self.start = np.append(self.start,
+                    datetime(year=1958, month=1, day=1) +
+                    timedelta(microseconds=int(hdu.data.field('obs time')[k])))
                 # interpolate and subtract ra and dec of the comet
                 self.longitudes = np.append(self.longitudes,
                         hdu.data.field('longitude')[k])
@@ -111,6 +115,8 @@ class HifiMap(object):
                 # define line intensity map
                 self.fvals = np.append(self.fvals,
                                 gildas.intens(flux, vel, [-.5, 1.])[0])
+        print gildas.frac_day(self.start[0])
+        print gildas.frac_day(self.start[-1])
 
     def plot(self):
         import matplotlib.pyplot as plt
@@ -129,7 +135,7 @@ class HifiMap(object):
         self.longitudes *= 3600
         self.latitudes *= 3600
 
-    def grid(self, ncell):
+    def grid(self, ncell, beameff=.74):
         """grid the data to a uniform grid using Gaussian kernel weights"""
         from scipy import interpolate
         from scipy.stats import norm
@@ -142,9 +148,10 @@ class HifiMap(object):
             for j in range(ncell):
                 dist = np.sqrt((self.longitudes - xi[i])**2 +
                         (self.latitudes - yi[j])**2)
-                flux = np.average(self.spec, weights=norm.pdf(dist, 0,
-                            self.sigma), axis=0)
-                zi[i,j] = gildas.intens(flux, vel, [-.1, 1.])[0]
+                flux = np.average(self.spec,
+                        weights=norm.pdf(dist, 0, self.sigma), axis=0)
+                zi[i,j] = gildas.intens(flux, vel, [-.1, 2.])[0]
+        zi *= .96/beameff
         return xi, yi, zi
 
     def griddata(self, ncell):
