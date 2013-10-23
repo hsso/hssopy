@@ -43,6 +43,7 @@ class HIFISpectrum(object):
     def __init__(self, fitsfile, subband=1, byteswap=True, freq0=556.9359877):
         from datetime import datetime
         hdus = pyfits.open(fitsfile)
+        self.header = hdus[0].header
         self.freq0 = freq0
         self.obsid = hdus[0].header['OBS_ID']
         self.backend = hdus[0].header['META_0']
@@ -63,8 +64,8 @@ class HIFISpectrum(object):
         date_end = hdus[0].header['DATE-END']
         self.start = datetime.strptime(date_obs, "%Y-%m-%dT%H:%M:%S.%f")
         self.end = datetime.strptime(date_end, "%Y-%m-%dT%H:%M:%S.%f")
-        exp = self.end - self.start
-        self.mid_time = self.start + exp/2
+        self.exp = self.end - self.start
+        self.mid_time = self.start + self.exp/2
         if byteswap:
             self.flux = self.flux.byteswap().newbyteorder('L')
             self.freq = self.freq.byteswap().newbyteorder('L')
@@ -96,6 +97,7 @@ class HIFISpectrum(object):
                                         t=self.vel)
 
     def scale(self, vel_lim=None):
+        """Scale flux by mean value within vel_lim"""
         if vel_lim:
             maskvel = np.where((self.vel < vel_lim[1]) &
                                 (self.vel > vel_lim[0]))
@@ -154,7 +156,7 @@ class HIFISpectrum(object):
             sl = slice(0, -1)
         plt.plot(self.freq[sl], self.__getattribute__(flux)[sl],
                 drawstyle='steps-mid')
-        if flux=="flux":
+        if flux=="flux" and hasattr(self, "baseline"):
             plt.plot(self.freq[sl], self.baseline[sl])
         try:
             plt.plot(self.freq[self.maskvel],
