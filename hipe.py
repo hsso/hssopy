@@ -6,6 +6,7 @@ import glob
 import numpy as np
 from os.path import join
 import matplotlib.pyplot as plt
+import jpl
 
 # Parsing command line arguments
 parser = argparse.ArgumentParser()
@@ -41,5 +42,14 @@ if __name__ == "__main__":
     if args.freq:
         plt.axvline(x=args.freq, linestyle='--')
         plt.axvline(x=args.freq-throw, linestyle=':')
+    # Read catalog data file
+    x0, x1 = plt.gca().get_xlim()
+    images = jpl.JPLmol(32003).trans
+    img = images[(x0*1e3 < images['FREQ']) & (images['FREQ'] < x1*1e3) &
+                (images['LGINT'] > -3.4)
+                ]
+    for j in img:
+        print j['FREQ']*1e-3, j['LGINT']
+        plt.axvline(x=j['FREQ']*1e-3, linestyle='--')
     plt.legend()
     plt.show()
