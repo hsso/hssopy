@@ -95,13 +95,15 @@ class HifiMap(object):
             freq = hdu.data.field('{0}frequency_{1}'.format(
                 sideband.lower(), subband))
             flux = hdu.data.field('flux_{0}'.format(subband))
-            vel = [gildas.vel(f, freq0) for f in freq]
-            if not hasattr(self, "spec"):
-                self.spec = flux
-                self.vel = vel
-            else:
-                self.spec = np.vstack((self.spec, flux))
-                self.vel = np.vstack((self.vel, vel))
+            for f, fl, in zip(freq, flux):
+                vel = gildas.vel(f, freq0)
+                mask = [np.abs(vel) < 5]
+                if not hasattr(self, "spec"):
+                    self.spec = fl[mask]
+                    self.vel = vel[mask]
+                else:
+                    self.spec = np.vstack((self.spec, fl[mask]))
+                    self.vel = np.vstack((self.vel, vel[mask]))
             # define line intensity map
 #             self.fvals = np.append(self.fvals,
 #                             gildas.intens(flux, vel, [-.5, 1.])[0])
@@ -125,9 +127,7 @@ class HifiMap(object):
 
     def grid(self, ncell, beameff=.74):
         """grid the data to a uniform grid using Gaussian kernel weights"""
-        from scipy import interpolate
         from scipy.stats import norm
-        import matplotlib.pyplot as plt
         xi = np.linspace(self.longitudes.min(), self.longitudes.max(), ncell)
         yi = np.linspace(self.latitudes.min(), self.latitudes.max(), ncell)
         zi = np.zeros((ncell, ncell))
