@@ -65,6 +65,7 @@ class HifiMap(object):
     """Calculate line intensity map and coordinates"""
 
     def __init__(self):
+        """Initial empty arrays"""
         self.longitudes = np.array([])
         self.latitudes = np.array([])
         self.midtime = np.array([])
@@ -72,6 +73,7 @@ class HifiMap(object):
         self.fvals = np.array([])
 
     def add(self, filename, freq0, sideband='USB', subband=1):
+        """Add data from map"""
         self.filename = filename
         # read HSA FITS file
         hdulist = pyfits.open(filename)
@@ -79,44 +81,30 @@ class HifiMap(object):
         self.npoints = hdulist[1].data.field('flux_1').shape[0]
         self.sigma = sigma(fwhm(freq=freq0*1e9))
         for hdu in hdulist[1:]:
-            for k in range(hdu.data.field('flux_1').shape[0]):
-                # mid-date observing time in UT
-                integration_time = hdu.data.field('integration time')[k]
-                # if the integration time is not a scalar
-                if not isinstance(integration_time, float):
-                    integration_time = integration_time[subband-1]
-                self.midtime = np.append(self.midtime,
-                    datetime(year=1958, month=1, day=1) +
-                    timedelta(microseconds=hdu.data.field('obs time')[k] +
-                    integration_time/2.))
-                self.start = np.append(self.start,
-                    datetime(year=1958, month=1, day=1) +
-                    timedelta(microseconds=int(hdu.data.field('obs time')[k])))
-                # interpolate and subtract ra and dec of the comet
-                self.longitudes = np.append(self.longitudes,
-                        hdu.data.field('longitude')[k])
-                self.latitudes = np.append(self.latitudes,
-                        hdu.data.field('latitude')[k])
-                # read frequency and flux
-                freq = hdu.data.field('{0}frequency_{1}'.format(
-                    sideband.lower(), subband))[k]
-                flux = hdu.data.field('flux_{0}'.format(subband))[k]
-                vel = gildas.vel(freq, freq0)
-                # subtract baseline
-                basep = gildas.basepoly(vel, flux, [1.4, 5], deg=1)
-                flux -= basep(vel)
-                mask = [np.abs(vel) < 5]
-                if not hasattr(self, "spec"):
-                    self.spec = flux[mask]
-                    self.vel = vel[mask]
-                else:
-                    self.spec = np.vstack((self.spec, flux[mask]))
-                    self.vel = np.vstack((self.vel, vel[mask]))
-                # define line intensity map
-                self.fvals = np.append(self.fvals,
-                                gildas.intens(flux, vel, [-.5, 1.])[0])
-        print gildas.frac_day(self.start[0])
-        print gildas.frac_day(self.start[-1])
+            # mid-date observing time in UT
+            self.midtime = np.append(self.midtime,
+                [datetime(year=1958, month=1, day=1) +
+                timedelta(microseconds=int(ot)) for ot in
+                hdu.data.field('obs time')])
+            # interpolate and subtract ra and dec of the comet
+            self.longitudes = np.append(self.longitudes,
+                    hdu.data.field('longitude'))
+            self.latitudes = np.append(self.latitudes,
+                    hdu.data.field('latitude'))
+            # read frequency and flux
+            freq = hdu.data.field('{0}frequency_{1}'.format(
+                sideband.lower(), subband))
+            flux = hdu.data.field('flux_{0}'.format(subband))
+            vel = [gildas.vel(f, freq0) for f in freq]
+            if not hasattr(self, "spec"):
+                self.spec = flux
+                self.vel = vel
+            else:
+                self.spec = np.vstack((self.spec, flux))
+                self.vel = np.vstack((self.vel, vel))
+            # define line intensity map
+#             self.fvals = np.append(self.fvals,
+#                             gildas.intens(flux, vel, [-.5, 1.])[0])
 
     def plot(self):
         import matplotlib.pyplot as plt
@@ -150,9 +138,17 @@ class HifiMap(object):
                         (self.latitudes - yi[j])**2)
                 flux = np.average(self.spec,
                         weights=norm.pdf(dist, 0, self.sigma), axis=0)
+                basep = gildas.basepoly(vel, flux, [1.4, 5], deg=1)
+                flux -= basep(vel)
                 zi[i,j] = gildas.intens(flux, vel, [-.1, 2.])[0]
         zi *= .96/beameff
         return xi, yi, zi
+
+    def subtract(self):
+        # subtract baseline
+        for vel, flux in zip(self.vel, self.spec):
+            basep = gildas.basepoly(vel, flux, [1.4, 5], deg=1)
+            flux -= basep(vel)
 
     def griddata(self, ncell):
         """grid the data to a uniform grid using interpolate.griddata"""
