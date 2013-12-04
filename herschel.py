@@ -2,7 +2,6 @@
 """Misc functions"""
 
 from scipy import constants
-import astrocon as ac
 import numpy as np
 import pyfits
 from os.path import join
@@ -19,7 +18,7 @@ def fwhm(freq=freq['H2O'], diam=3.5, unit='arcsec'):
 
 def size(arcsec, delta=1): # km
     """calculate projected beam size"""
-    return delta*ac.AU*np.sin(arcsec/3600.*np.pi/180)/1e5
+    return delta*constants.au*np.sin(arcsec/3600.*np.pi/180)*1e-3
 
 def fft(hdulist, sideband, subband):
     "Return frequency, flux and frequency throw"
