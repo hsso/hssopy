@@ -240,7 +240,7 @@ def movaver(x, y, window_len=4):
         x = x[::-1]
         y = y[::-1]
     if x.size < window_len:
-        raise ValueError, "Input vector needs to be bigger than window size."
+        raise ValueError("Input vector needs to be bigger than window size.")
     w = np.ones(window_len, 'd')
     s = np.convolve(w/w.sum(), y, mode='same')
     fint = interpolate.interp1d(x, s)
@@ -251,7 +251,7 @@ def movaver(x, y, window_len=4):
 def movav(x, y, window_len=4):
     """Moving average and resampling"""
     if x.size < window_len:
-        raise ValueError, "Input vector needs to be bigger than window size."
+        raise ValueError("Input vector needs to be bigger than window size.")
     if x.size%window_len:
         newx = x[:-(x.size%window_len)].reshape(x.size/window_len, window_len)
         newy = y[:-(x.size%window_len)].reshape(x.size/window_len, window_len)
@@ -292,16 +292,17 @@ def smooth(x,window_len=11,window='hanning'):
     """
 
     if x.ndim != 1:
-        raise ValueError, "smooth only accepts 1 dimension arrays."
+        raise ValueError("smooth only accepts 1 dimension arrays.")
 
     if x.size < window_len:
-        raise ValueError, "Input vector needs to be bigger than window size."
+        raise ValueError("Input vector needs to be bigger than window size.")
 
     if window_len<3:
         return x
 
     if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-        raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+        raise ValueError("Window is on of 'flat', 'hanning', 'hamming', "
+                "'bartlett', 'blackman'")
 
     s=np.r_[2*x[0]-x[window_len:1:-1],x,2*x[-1]-x[-1:-window_len:-1]]
     #print(len(s))
