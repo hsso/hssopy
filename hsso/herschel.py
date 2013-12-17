@@ -128,6 +128,7 @@ class HifiMap(object):
     def grid(self, ncell, beameff=.74):
         """grid the data to a uniform grid using Gaussian kernel weights"""
         from scipy.stats import norm
+        import matplotlib.pyplot as plt
         xi = np.linspace(self.longitudes.min(), self.longitudes.max(), ncell)
         yi = np.linspace(self.latitudes.min(), self.latitudes.max(), ncell)
         zi = np.zeros((ncell, ncell))
@@ -136,11 +137,18 @@ class HifiMap(object):
             for j in range(ncell):
                 dist = np.sqrt((self.longitudes - xi[i])**2 +
                         (self.latitudes - yi[j])**2)
+                sortidx = np.argsort(dist)
+                diff = np.append(dist[sortidx[0]], dist[sortidx[1:]] -
+                            dist[sortidx[:-1]])
+#                 flux = np.sum(self.spec[sortidx,:]*diff[:,np.newaxis]*
+#                         norm.pdf(dist[sortidx], 0, self.sigma)[:,np.newaxis],
+#                         axis=0)
                 flux = np.average(self.spec,
                         weights=norm.pdf(dist, 0, self.sigma), axis=0)
                 basep = gildas.basepoly(vel, flux, [1.4, 5], deg=1)
                 flux -= basep(vel)
                 zi[i,j] = gildas.intens(flux, vel, [-.1, 2.])[0]
+        plt.show()
         zi *= .96/beameff
         return xi, yi, zi
 
