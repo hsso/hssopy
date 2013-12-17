@@ -224,7 +224,7 @@ def deltadot(middate, filename="/home/miguel/HssO/Wild2/horizons.txt",
     ymdhm = np.core.defchararray.add(ymd, hm)
     # read quantity from JPL Horizons ephemeris file
     vdot = np.loadtxt(filename, usecols=(column,), unpack=True)
-    datenum = [date2num(datetime.strptime(i, "%Y-%b-%d%H:%M")) for i in ymdhm]
+    datenum = [date2num(datetime.strptime(i.decode(), "%Y-%b-%d%H:%M")) for i in ymdhm]
     # 1D interpolation
     return interpolate.interp1d(datenum, vdot)(date2num(middate))
 
