@@ -22,7 +22,7 @@ def size(arcsec, delta=1): # km
 
 def fft(hdulist, sideband, subband):
     "Return frequency, flux and frequency throw"
-    for i in hdulist[1].header.ascardlist().keys():
+    for i in hdulist[1].header.keys():
         if hdulist[1].header[i] == 'loThrow':
             throw = hdulist[1].header[i[4:]]
             break
@@ -46,7 +46,7 @@ class HIFISpectrum(object):
         self.freq0 = freq0
         self.obsid = hdus[0].header['OBS_ID']
         self.backend = hdus[0].header['META_0']
-        for i in hdus[1].header.ascardlist().keys():
+        for i in hdus[1].header.keys():
             if hdus[1].header[i] == 'loThrow':
                 self.throw = hdus[1].header[i[4:]]
             elif hdus[1].header[i] == 'sideband':
