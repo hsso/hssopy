@@ -114,14 +114,21 @@ class HIFISpectrum(object):
 
     def fftbase(self, fftlim, line=(0,), shift=0, linelim=1, baselim=3,
                 plot=False, throw=False):
-        """Fit baseline ufing FFT"""
+        """Fit baseline using FFT
+
+        Parameters
+        ----------
+        throw : boolean
+            True for unfolded data
+        """
         from scipy import fftpack
         self.baseflux = self.flux.copy()
         if line:
+            # mask emission line
             maskline, self.maskvel, self.func = self.mask(line[0], shift,
                     linelim, baselim)
             self.baseflux[maskline] = self.func(self.freq[maskline])
-            if hasattr(self, 'throwvel'):
+            if throw:
                 maskline, self.maskvelthrow, self.functh = self.mask(
                         self.throwvel, shift, linelim, baselim)
                 self.baseflux[maskline] = self.functh(self.freq[maskline])
