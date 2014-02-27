@@ -152,6 +152,8 @@ class HIFISpectrum(object):
         self.fluxcal *= 0.96/.75
         self.intens, self.error = gildas.intens(self.fluxcal, self.vel,
                                                 (-linelim, linelim))
+        self.vshift, self.vshift_e = gildas.vshift(self.fluxcal, self.vel,
+                                                (-linelim, linelim))
         self.snr = self.intens/self.error
 
     def plot(self, flux="flux", twiny=True, filename=None, lim=None):
