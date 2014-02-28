@@ -94,6 +94,9 @@ class HIFISpectrum(object):
         if hasattr(self, "fluxcal"):
             self.fluxcal = resample(self.fluxcal,
                                         int(len(self.fluxcal)/times))
+        if hasattr(self, "baseline"):
+            self.baseline = resample(self.baseline,
+                                        int(len(self.baseline)/times))
 
     def scale(self, vel_lim=None):
         """Scale flux by mean value within vel_lim"""
