@@ -54,7 +54,6 @@ class HIFISpectrum(object):
         self.freq = hdus[1].data.field('{0}frequency_{1}'.format(
                     self.sideband.lower(), subband))[0]
         self.flux = hdus[1].data.field('flux_{0}'.format(subband))[0]
-        self.vel = gildas.vel(self.freq, freq0)
         self.throwvel = gildas.vel(self.freq0-self.throw, freq0)
         self.ra = hdus[1].data.field('longitude')[0]
         self.dec = hdus[1].data.field('latitude')[0]
@@ -69,6 +68,9 @@ class HIFISpectrum(object):
             self.flux = self.flux.byteswap().newbyteorder('L')
             self.freq = self.freq.byteswap().newbyteorder('L')
 
+    def vel(self):
+        return gildas.vel(self.freq, self.freq0)
+
     def add(self, spectrum):
         if np.all(self.freq == spectrum.freq):
             self.flux += spectrum.flux
@@ -78,36 +80,34 @@ class HIFISpectrum(object):
             flux_list = [self.flux, spectrum.flux]
             self.freq, self.flux = gildas.averagen(freq_list, flux_list,
                     goodval=True)
-            self.vel = gildas.vel(self.freq, self.freq0)
 
     def fold(self):
         freq_list = [self.freq, self.freq + self.throw]
         flux_list = [self.flux, -self.flux]
         self.freq, self.flux = gildas.averagen(freq_list, flux_list,
                 goodval=True)
-        self.vel = gildas.vel(self.freq, self.freq0)
 
     def resample(self, times=2):
         from scipy.signal import resample
         self.flux, self.freq = resample(self.flux, int(len(self.flux)/times),
                                         t=self.freq)
-        self.fluxcal, self.vel = resample(self.fluxcal,
-                                        int(len(self.fluxcal)/times),
-                                        t=self.vel)
+        if hasattr(self, "fluxcal"):
+            self.fluxcal = resample(self.fluxcal,
+                                        int(len(self.fluxcal)/times))
 
     def scale(self, vel_lim=None):
         """Scale flux by mean value within vel_lim"""
         if vel_lim:
-            maskvel = np.where((self.vel < vel_lim[1]) &
-                                (self.vel > vel_lim[0]))
+            maskvel = np.where((self.vel() < vel_lim[1]) &
+                                (self.vel() > vel_lim[0]))
             self.flux -= np.mean(self.flux[maskvel])
         else:
             self.flux -= np.mean(self.flux)
 
     def mask(self, line, shift, linelim, baselim):
-        maskline = np.where(np.abs(self.vel - line - shift) < linelim)
-        maskvel = np.where((np.abs(self.vel - line - shift) < baselim) &
-                                (np.abs(self.vel - line - shift) > linelim))
+        maskline = np.where(np.abs(self.vel() - line - shift) < linelim)
+        maskvel = np.where((np.abs(self.vel() - line - shift) < baselim) &
+                                (np.abs(self.vel() - line - shift) > linelim))
         func = np.poly1d(np.polyfit(self.freq[maskvel],
                                 self.baseflux[maskvel], 3))
         return maskline, maskvel, func
@@ -150,13 +150,14 @@ class HIFISpectrum(object):
         # calibrated flux
         self.fluxcal = self.flux - self.baseline
         self.fluxcal *= 0.96/.75
-        self.intens, self.error = gildas.intens(self.fluxcal, self.vel,
+        self.intens, self.error = gildas.intens(self.fluxcal, self.vel(),
                                                 (-linelim, linelim))
-        self.vshift, self.vshift_e = gildas.vshift(self.fluxcal, self.vel,
+        self.vshift, self.vshift_e = gildas.vshift(self.fluxcal, self.vel(),
                                                 (-linelim, linelim))
         self.snr = self.intens/self.error
 
     def plot(self, flux="flux", twiny=True, filename=None, lim=None):
+        """Plot spectra"""
         import matplotlib.pyplot as plt
         if lim:
             sl = slice(lim, -lim)
@@ -195,7 +196,7 @@ class HIFISpectrum(object):
 
     def save(self, filename, flux="flux"):
         """Save spectrum to ASCII file"""
-        np.savetxt(filename, np.transpose((self.freq, self.vel,
+        np.savetxt(filename, np.transpose((self.freq, self.vel(),
                     self.__getattribute__(flux))))
 
     def tofits(self, filename, columns=("freq", "fluxcal")):
