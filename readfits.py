@@ -12,14 +12,14 @@ class HipeFits:
         self.hdulist = pyfits.open(filename)
         self.cols = self.hdulist[j].columns
         self.hdr = self.hdulist[j].header
-        if self.hdulist[j].header.has_key('telescop'):
+        if 'telescop' in self.hdulist[j].header:
             self.telescope = self.hdulist[j].header['telescop']
         elif self.hdulist[j].columns.names.__contains__('TELESCOP'):
             self.telescope = self.hdulist[j].data.field('telescop')[0]
         self.crpix1 = self.hdulist[j].header['crpix1']
         if self.crpix1 == 0: self.crpix1 = 1133
         self.cdelt1 = self.hdulist[j].header['cdelt1']*1e-9 # step
-        if self.hdr.has_key('restfreq'):
+        if 'restfreq' in self.hdr:
             self.restfreq = self.hdr['restfreq']*1e-9
         self.badval = self.hdulist[j].header['blank']
         if self.hdulist[j].header['deltaf1']*1e-9 > 0:
@@ -53,7 +53,7 @@ class HipeFits:
 
 def telescop(hdulist, j, i):
     """Return telescope name"""
-    if hdulist[j].header.has_key('telescop'):
+    if 'telescop' in self.hdulist[j].header:
         return hdulist[j].header['telescop']
     elif hdulist[j].columns.names.__contains__('TELESCOP'):
         return hdulist[j].data.field('telescop')[i]
