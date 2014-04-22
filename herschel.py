@@ -159,27 +159,28 @@ class HIFISpectrum(object):
                                                 (-linelim, linelim))
         self.snr = self.intens/self.error
 
-    def plot(self, y="flux", twiny=True, filename=None, lim=None):
+    def plot(self, x="freq", y="flux", twiny=False, filename=None, lim=None):
         """Plot spectra"""
         import matplotlib.pyplot as plt
         if lim:
             sl = slice(lim, -lim)
         else:
             sl = slice(0, -1)
-        plt.plot(self.freq[sl], self.__getattribute__(y)[sl],
+        plt.plot(self.__getattribute__(x)[sl], self.__getattribute__(y)[sl],
                 drawstyle='steps-mid')
         if y=="flux" and hasattr(self, "baseline"):
-            plt.plot(self.freq[sl], self.baseline[sl])
+            plt.plot(self.__getattribute__(x)[sl], self.baseline[sl])
         try:
-            plt.plot(self.freq[self.maskvel],
-                        self.func(self.freq[self.maskvel]), 'red')
-            plt.plot(self.freq[self.maskvelthrow],
-                        self.functh(self.freq[self.maskvelthrow]), 'red')
+            plt.plot(self.__getattribute__(x)[self.maskvel],
+                self.func(self.__getattribute__(x)[self.maskvel]), 'red')
+            plt.plot(self.__getattribute__(x)[self.maskvelthrow],
+                self.functh(self.__getattribute__(x)[self.maskvelthrow]), 'red')
         except (AttributeError, IndexError):
             pass
-        plt.axvline(x=self.freq0, linestyle='--')
-        if hasattr(self, 'throw'):
-            plt.axvline(x=self.freq0-self.throw, linestyle='dotted')
+        if x == 'freq':
+            plt.axvline(x=self.freq0, linestyle='--')
+            if hasattr(self, 'throw'):
+                plt.axvline(x=self.freq0-self.throw, linestyle='dotted')
         plt.ylabel('$T_{\mathrm{mB}}$ [K]')
         plt.xlabel(r'$\nu$ [GHz]')
         plt.grid(axis='both')
