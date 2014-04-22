@@ -159,16 +159,16 @@ class HIFISpectrum(object):
                                                 (-linelim, linelim))
         self.snr = self.intens/self.error
 
-    def plot(self, flux="flux", twiny=True, filename=None, lim=None):
+    def plot(self, y="flux", twiny=True, filename=None, lim=None):
         """Plot spectra"""
         import matplotlib.pyplot as plt
         if lim:
             sl = slice(lim, -lim)
         else:
             sl = slice(0, -1)
-        plt.plot(self.freq[sl], self.__getattribute__(flux)[sl],
+        plt.plot(self.freq[sl], self.__getattribute__(y)[sl],
                 drawstyle='steps-mid')
-        if flux=="flux" and hasattr(self, "baseline"):
+        if y=="flux" and hasattr(self, "baseline"):
             plt.plot(self.freq[sl], self.baseline[sl])
         try:
             plt.plot(self.freq[self.maskvel],
