@@ -160,8 +160,15 @@ class HIFISpectrum(object):
         self.snr = self.intens/self.error
 
     def plot(self, x="freq", y="flux", twiny=False, filename=None, lim=None):
-        """Plot spectra"""
+        """Plot spectra
+
+        Parameters
+        ----------
+        lim: int
+            slice range that will be used for plotting
+        """
         import matplotlib.pyplot as plt
+        label = { "freq": r'$\nu$ [GHz]', "vel":'$v$ [km s$^{-1}$]' }
         if lim:
             sl = slice(lim, -lim)
         else:
@@ -182,7 +189,7 @@ class HIFISpectrum(object):
             if hasattr(self, 'throw'):
                 plt.axvline(x=self.freq0-self.throw, linestyle='dotted')
         plt.ylabel('$T_{\mathrm{mB}}$ [K]')
-        plt.xlabel(r'$\nu$ [GHz]')
+        plt.xlabel(label[x])
         plt.grid(axis='both')
         plt.autoscale(axis='x', tight=True)
         if twiny:
@@ -192,7 +199,7 @@ class HIFISpectrum(object):
             x1, x2 = ax1.get_xlim()
             ax2.set_xlim(gildas.vel(x1, self.freq0),
                          gildas.vel(x2, self.freq0))
-            plt.xlabel('$v$ [km s$^{-1}$]')
+            plt.xlabel(label["vel"])
         if filename:
             plt.savefig(filename)
         else:
