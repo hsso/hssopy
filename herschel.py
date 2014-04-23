@@ -170,10 +170,14 @@ class HIFISpectrum(object):
         """
         import matplotlib.pyplot as plt
         label = { "freq": r'$\nu$ [GHz]', "vel":'$v$ [km s$^{-1}$]' }
-        plt.plot(self.__getattribute__(x), self.__getattribute__(y),
+        if lim:
+            mask = np.where(np.abs(self.__getattribute__(x)) < lim)
+        else:
+            mask = slice(0, -1)
+        plt.plot(self.__getattribute__(x)[mask], self.__getattribute__(y)[mask],
                 drawstyle='steps-mid')
         if y=="flux" and hasattr(self, "baseline"):
-            plt.plot(self.__getattribute__(x), self.baseline)
+            plt.plot(self.__getattribute__(x)[mask], self.baseline[mask])
         try:
             plt.plot(self.__getattribute__(x)[self.maskvel],
                 self.func(self.__getattribute__(x)[self.maskvel]), 'red')
@@ -188,7 +192,6 @@ class HIFISpectrum(object):
         plt.ylabel('$T_{\mathrm{mB}}$ [K]')
         plt.xlabel(label[x])
         plt.grid(axis='both')
-        plt.autoscale(axis='x', tight=True)
         if twiny:
             ax1 = plt.gca()
             # update xlim of ax2
