@@ -131,9 +131,9 @@ class HIFISpectrum(object):
         self.baseflux = self.flux.copy()
         if line:
             # mask emission line
-            maskline, self.maskvel, self.func = self.mask(line[0], shift,
+            self.maskline, self.maskvel, self.func = self.mask(line[0], shift,
                     linelim, baselim)
-            self.baseflux[maskline] = self.func(self.freq[maskline])
+            self.baseflux[self.maskline] = self.func(self.freq[self.maskline])
             if throw:
                 maskline, self.maskvelthrow, self.functh = self.mask(
                         self.throwvel, shift, linelim, baselim)
@@ -182,6 +182,8 @@ class HIFISpectrum(object):
             try:
                 plt.plot(self.__getattribute__(x)[self.maskvel],
                     self.func(self.freq[self.maskvel]), 'red')
+                plt.plot(self.__getattribute__(x)[self.maskline],
+                    self.func(self.freq[self.maskline]), 'yellow')
                 plt.plot(self.__getattribute__(x)[self.maskvelthrow],
                     self.functh(self.freq[self.maskvelthrow]), 'red')
             except (AttributeError, IndexError):
