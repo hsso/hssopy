@@ -170,6 +170,7 @@ class HIFISpectrum(object):
             slice range that will be used for plotting
         """
         import matplotlib.pyplot as plt
+        from matplotlib.ticker import MultipleLocator
         label = { "freq": r'$\nu$ [GHz]', "vel":'$v$ [km s$^{-1}$]' }
         if lim:
             mask = np.where(np.abs(self.__getattribute__(x)) < lim)
@@ -193,6 +194,7 @@ class HIFISpectrum(object):
             if hasattr(self, 'throw'):
                 plt.axvline(x=self.freq0-self.throw, linestyle='dotted')
         if y == 'fluxcal': plt.axhline(y=0, linestyle='--')
+        if x == 'vel': plt.gca().xaxis.set_minor_locator(MultipleLocator(1))
         plt.ylabel('$T_{\mathrm{mB}}$ [K]')
         plt.xlabel(label[x])
         plt.grid(axis='both')
