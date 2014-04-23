@@ -179,13 +179,13 @@ class HIFISpectrum(object):
                 drawstyle='steps-mid')
         if y=="flux" and hasattr(self, "baseline"):
             plt.plot(self.__getattribute__(x)[mask], self.baseline[mask])
-#         try:
-#             plt.plot(self.__getattribute__(x)[self.maskvel],
-#                 self.func(self.__getattribute__(x)[self.maskvel]), 'red')
-#             plt.plot(self.__getattribute__(x)[self.maskvelthrow],
-#                 self.functh(self.__getattribute__(x)[self.maskvelthrow]), 'red')
-#         except (AttributeError, IndexError):
-#             pass
+            try:
+                plt.plot(self.__getattribute__(x)[self.maskvel],
+                    self.func(self.freq[self.maskvel]), 'red')
+                plt.plot(self.__getattribute__(x)[self.maskvelthrow],
+                    self.functh(self.freq[self.maskvelthrow]), 'red')
+            except (AttributeError, IndexError):
+                pass
         if x == 'freq':
             plt.axvline(x=self.freq0, linestyle='--')
             if hasattr(self, 'throw'):
