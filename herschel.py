@@ -68,6 +68,7 @@ class HIFISpectrum(object):
             self.flux = self.flux.byteswap().newbyteorder('L')
             self.freq = self.freq.byteswap().newbyteorder('L')
 
+    @property
     def vel(self):
         return gildas.vel(self.freq, self.freq0)
 
@@ -101,16 +102,16 @@ class HIFISpectrum(object):
     def scale(self, vel_lim=None):
         """Scale flux by mean value within vel_lim"""
         if vel_lim:
-            maskvel = np.where((self.vel() < vel_lim[1]) &
-                                (self.vel() > vel_lim[0]))
+            maskvel = np.where((self.vel < vel_lim[1]) &
+                                (self.vel > vel_lim[0]))
             self.flux -= np.mean(self.flux[maskvel])
         else:
             self.flux -= np.mean(self.flux)
 
     def mask(self, line, shift, linelim, baselim):
-        maskline = np.where(np.abs(self.vel() - line - shift) < linelim)
-        maskvel = np.where((np.abs(self.vel() - line - shift) < baselim) &
-                                (np.abs(self.vel() - line - shift) > linelim))
+        maskline = np.where(np.abs(self.vel - line - shift) < linelim)
+        maskvel = np.where((np.abs(self.vel - line - shift) < baselim) &
+                                (np.abs(self.vel - line - shift) > linelim))
         func = np.poly1d(np.polyfit(self.freq[maskvel],
                                 self.baseflux[maskvel], 3))
         return maskline, maskvel, func
@@ -153,9 +154,9 @@ class HIFISpectrum(object):
         # calibrated flux
         self.fluxcal = self.flux - self.baseline
         self.fluxcal *= 0.96/.75
-        self.intens, self.error = gildas.intens(self.fluxcal, self.vel(),
+        self.intens, self.error = gildas.intens(self.fluxcal, self.vel,
                                                 (-linelim, linelim))
-        self.vshift, self.vshift_e = gildas.vshift(self.fluxcal, self.vel(),
+        self.vshift, self.vshift_e = gildas.vshift(self.fluxcal, self.vel,
                                                 (-linelim, linelim))
         self.snr = self.intens/self.error
 
@@ -169,14 +170,10 @@ class HIFISpectrum(object):
         """
         import matplotlib.pyplot as plt
         label = { "freq": r'$\nu$ [GHz]', "vel":'$v$ [km s$^{-1}$]' }
-        if lim:
-            sl = slice(lim, -lim)
-        else:
-            sl = slice(0, -1)
-        plt.plot(self.__getattribute__(x)[sl], self.__getattribute__(y)[sl],
+        plt.plot(self.__getattribute__(x), self.__getattribute__(y),
                 drawstyle='steps-mid')
         if y=="flux" and hasattr(self, "baseline"):
-            plt.plot(self.__getattribute__(x)[sl], self.baseline[sl])
+            plt.plot(self.__getattribute__(x), self.baseline)
         try:
             plt.plot(self.__getattribute__(x)[self.maskvel],
                 self.func(self.__getattribute__(x)[self.maskvel]), 'red')
@@ -207,7 +204,7 @@ class HIFISpectrum(object):
 
     def save(self, filename, flux="flux"):
         """Save spectrum to ASCII file"""
-        np.savetxt(filename, np.transpose((self.freq, self.vel(),
+        np.savetxt(filename, np.transpose((self.freq, self.vel,
                     self.__getattribute__(flux))))
 
     def tofits(self, filename, columns=("freq", "fluxcal")):
