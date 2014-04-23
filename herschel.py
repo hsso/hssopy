@@ -177,20 +177,20 @@ class HIFISpectrum(object):
             mask = slice(0, -1)
         plt.plot(self.__getattribute__(x)[mask], self.__getattribute__(y)[mask],
                 drawstyle='steps-mid')
-        print(self.baseline)
         if y=="flux" and hasattr(self, "baseline"):
             plt.plot(self.__getattribute__(x)[mask], self.baseline[mask])
-        try:
-            plt.plot(self.__getattribute__(x)[self.maskvel],
-                self.func(self.__getattribute__(x)[self.maskvel]), 'red')
-            plt.plot(self.__getattribute__(x)[self.maskvelthrow],
-                self.functh(self.__getattribute__(x)[self.maskvelthrow]), 'red')
-        except (AttributeError, IndexError):
-            pass
+#         try:
+#             plt.plot(self.__getattribute__(x)[self.maskvel],
+#                 self.func(self.__getattribute__(x)[self.maskvel]), 'red')
+#             plt.plot(self.__getattribute__(x)[self.maskvelthrow],
+#                 self.functh(self.__getattribute__(x)[self.maskvelthrow]), 'red')
+#         except (AttributeError, IndexError):
+#             pass
         if x == 'freq':
             plt.axvline(x=self.freq0, linestyle='--')
             if hasattr(self, 'throw'):
                 plt.axvline(x=self.freq0-self.throw, linestyle='dotted')
+        if y == 'fluxcal': plt.axhline(y=0, linestyle='--')
         plt.ylabel('$T_{\mathrm{mB}}$ [K]')
         plt.xlabel(label[x])
         plt.grid(axis='both')
