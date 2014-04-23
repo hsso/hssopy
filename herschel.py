@@ -39,7 +39,8 @@ def hififits(datadir, obsid, backend, pol, sideband):
 
 class HIFISpectrum(object):
 
-    def __init__(self, fitsfile, subband=1, byteswap=True, freq0=556.9359877):
+    def __init__(self, fitsfile, subband=1, byteswap=True, freq0=556.9359877,
+            beameff=.75):
         from datetime import datetime
         hdus = pyfits.open(fitsfile)
         self.header = hdus[0].header
@@ -54,6 +55,7 @@ class HIFISpectrum(object):
         self.freq = hdus[1].data.field('{0}frequency_{1}'.format(
                     self.sideband.lower(), subband))[0]
         self.flux = hdus[1].data.field('flux_{0}'.format(subband))[0]
+        self.flux *= 0.96/beameff
         self.throwvel = gildas.vel(self.freq0-self.throw, freq0)
         self.ra = hdus[1].data.field('longitude')[0]
         self.dec = hdus[1].data.field('latitude')[0]
@@ -153,7 +155,6 @@ class HIFISpectrum(object):
         self.baseline = np.real(fftpack.ifft(sig_fft))
         # calibrated flux
         self.fluxcal = self.flux - self.baseline
-        self.fluxcal *= 0.96/.75
         self.intens, self.error = gildas.intens(self.fluxcal, self.vel,
                                                 (-linelim, linelim))
         self.vshift, self.vshift_e = gildas.vshift(self.fluxcal, self.vel,
@@ -176,6 +177,7 @@ class HIFISpectrum(object):
             mask = slice(0, -1)
         plt.plot(self.__getattribute__(x)[mask], self.__getattribute__(y)[mask],
                 drawstyle='steps-mid')
+        print(self.baseline)
         if y=="flux" and hasattr(self, "baseline"):
             plt.plot(self.__getattribute__(x)[mask], self.baseline[mask])
         try:
