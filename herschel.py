@@ -161,6 +161,10 @@ class HIFISpectrum(object):
                                                 (-linelim, linelim))
         self.snr = self.intens/self.error
 
+    def int(self, linelim=1):
+        """Line intensity"""
+        return gildas.intens(self.fluxcal, self.vel, (-linelim, linelim))
+
     def plot(self, x="freq", y="flux", twiny=False, filename=None, lim=None):
         """Plot spectra
 
