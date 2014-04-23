@@ -55,7 +55,7 @@ class HIFISpectrum(object):
         self.freq = hdus[1].data.field('{0}frequency_{1}'.format(
                     self.sideband.lower(), subband))[0]
         self.flux = hdus[1].data.field('flux_{0}'.format(subband))[0]
-        self.flux *= 0.96/beameff
+        self.flux /= beameff
         self.throwvel = gildas.vel(self.freq0-self.throw, freq0)
         self.ra = hdus[1].data.field('longitude')[0]
         self.dec = hdus[1].data.field('latitude')[0]
