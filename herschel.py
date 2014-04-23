@@ -165,6 +165,10 @@ class HIFISpectrum(object):
         """Line intensity"""
         return gildas.intens(self.fluxcal, self.vel, (-linelim, linelim))
 
+    def vsh(self, linelim=1):
+        """Velocity shift"""
+        return gildas.vshift(self.fluxcal, self.vel, (-linelim, linelim))
+
     def plot(self, x="freq", y="flux", twiny=False, filename=None, lim=None):
         """Plot spectra
 
