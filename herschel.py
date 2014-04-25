@@ -161,13 +161,13 @@ class HIFISpectrum(object):
                                                 (-linelim, linelim))
         self.snr = self.intens/self.error
 
-    def int(self, lim=(-1, 1)):
+    def int(self, lim=(-1, 1), rmslim=[2,10]):
         """Line intensity"""
-        return gildas.intens(self.fluxcal, self.vel, lim)
+        return gildas.intens(self.fluxcal, self.vel, lim, rmslim)
 
-    def vsh(self, lim=(-1, 1)):
+    def vsh(self, lim=(-1, 1), rmslim=[2,10]):
         """Velocity shift"""
-        return gildas.vshift(self.fluxcal, self.vel, lim)
+        return gildas.vshift(self.fluxcal, self.vel, lim, rmslim)
 
     def plot(self, x="freq", y="flux", twiny=False, filename=None, lim=None):
         """Plot spectra
