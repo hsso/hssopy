@@ -83,6 +83,8 @@ class HIFISpectrum(object):
             flux_list = [self.flux, spectrum.flux]
             self.freq, self.flux = gildas.averagen(freq_list, flux_list,
                     goodval=True)
+        self.ra = np.average((self.ra, spectrum.ra))
+        self.dec = np.average((self.dec, spectrum.dec))
 
     def fold(self):
         freq_list = [self.freq, self.freq + self.throw]
