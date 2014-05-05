@@ -60,6 +60,7 @@ class HIFISpectrum(object):
         self.ra = hdus[j].data.field('longitude')[k]
         self.dec = hdus[j].data.field('latitude')[k]
         self.integration = hdus[j].data.field('integration time')[k]
+        self.obs_time = hdus[j].data.field('obs time')[k]
         date_obs = hdus[0].header['DATE-OBS']
         date_end = hdus[0].header['DATE-END']
         self.start = datetime.strptime(date_obs, "%Y-%m-%dT%H:%M:%S.%f")
