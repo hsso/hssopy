@@ -121,6 +121,13 @@ class HIFISpectrum(object):
                                 self.baseflux[maskvel], 3))
         return maskline, maskvel, func
 
+    def base(self, shift=0, lim=(2, 10), deg=1):
+        """Fit polynomial baseline
+        """
+        basep = gildas.basepoly(self.vel-shift, self.flux, lim, deg=deg)
+        # calibrated flux
+        self.fluxcal = self.flux - basep(self.vel)
+
     def fftbase(self, fftlim, line=(0,), shift=0, linelim=1, baselim=3,
                 plot=False, throw=False):
         """Fit baseline using FFT
