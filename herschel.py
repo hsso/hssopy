@@ -39,10 +39,10 @@ def hififits(datadir, obsid, backend, pol, sideband):
 
 class HIFISpectrum(object):
 
-    def __init__(self, fitsfile, subband=1, byteswap=True, freq0=freq['H2O'],
+    def __init__(self, hdus, subband=1, byteswap=True, freq0=freq['H2O'],
             beameff=.75, j=1, k=0):
         from datetime import datetime
-        hdus = pyfits.open(fitsfile)
+        if not isinstance(hdus, pyfits.core.HDUList): hdus = pyfits.open(fitsfile)
         self.header = hdus[0].header
         self.freq0 = freq0
         self.obsid = hdus[0].header['OBS_ID']
