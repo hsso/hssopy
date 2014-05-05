@@ -40,26 +40,26 @@ def hififits(datadir, obsid, backend, pol, sideband):
 class HIFISpectrum(object):
 
     def __init__(self, fitsfile, subband=1, byteswap=True, freq0=freq['H2O'],
-            beameff=.75):
+            beameff=.75, j=1, k=0):
         from datetime import datetime
         hdus = pyfits.open(fitsfile)
         self.header = hdus[0].header
         self.freq0 = freq0
         self.obsid = hdus[0].header['OBS_ID']
         self.backend = hdus[0].header['META_0']
-        for i in hdus[1].header.keys():
+        for i in hdus[j].header.keys():
             if hdus[1].header[i] == 'loThrow':
                 self.throw = hdus[1].header[i[4:]]
-            elif hdus[1].header[i] == 'sideband':
+            elif hdus[j].header[i] == 'sideband':
                 self.sideband = hdus[1].header[i[4:]]
-        self.freq = hdus[1].data.field('{0}frequency_{1}'.format(
-                    self.sideband.lower(), subband))[0]
-        self.flux = hdus[1].data.field('flux_{0}'.format(subband))[0]
+        self.freq = hdus[j].data.field('{0}frequency_{1}'.format(
+                    self.sideband.lower(), subband))[k]
+        self.flux = hdus[j].data.field('flux_{0}'.format(subband))[k]
         self.flux /= beameff
         self.throwvel = gildas.vel(self.freq0-self.throw, freq0)
-        self.ra = hdus[1].data.field('longitude')[0]
-        self.dec = hdus[1].data.field('latitude')[0]
-        self.integration = hdus[1].data.field('integration time')[0]
+        self.ra = hdus[j].data.field('longitude')[k]
+        self.dec = hdus[j].data.field('latitude')[k]
+        self.integration = hdus[j].data.field('integration time')[k]
         date_obs = hdus[0].header['DATE-OBS']
         date_end = hdus[0].header['DATE-END']
         self.start = datetime.strptime(date_obs, "%Y-%m-%dT%H:%M:%S.%f")
