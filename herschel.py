@@ -9,6 +9,7 @@ from hsso import gildas
 import glob
 from datetime import datetime
 import matplotlib.pyplot as plt
+import pywcs
 
 freq = {'H2O': 556.9359877}
 beameff = [.75]
@@ -256,7 +257,7 @@ def writeto_fits(filename, columns):
 class Pacsmap(object):
     """Read PACS photometry map"""
 
-    def __init__(self, obsid, size=60, zoom=0, comet=True, debug=False):
+    def __init__(self, obsid, size=60, zoom=0, comet=True, debug=False, fn="horizons.txt"):
         """return patch centered on the nucleus"""
         if isinstance(obsid, pyfits.core.HDUList):
             self.hdus = obsid
@@ -275,13 +276,10 @@ class Pacsmap(object):
             end = datetime.strptime(date_end, "%Y-%m-%dT%H:%M:%S.%f")
             mid_time = start + (end-start)/2
             # interpolate ra and dec of the comet
-            ra = gildas.deltadot(mid_time, filename="horizons.txt",
-                    column=2)
-            dec = gildas.deltadot(mid_time, filename="horizons.txt",
-                    column=3)
+            ra = gildas.deltadot(mid_time, filename=fn, column=2)
+            dec = gildas.deltadot(mid_time, filename=fn, column=3)
             # calculate direction toward the Sun
-            phase_ang = gildas.deltadot(mid_time,
-                    filename="horizons.txt", column=8)
+            phase_ang = gildas.deltadot(mid_time, filename=fn, column=8)
             alpha = 3*np.pi/2 - phase_ang*np.pi/180
             cos, sin = np.cos(alpha), np.sin(alpha)
             # origin coordinate is 0 (Numpy and C standards)
