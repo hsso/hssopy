@@ -8,6 +8,7 @@ from os.path import join
 from hsso import gildas
 import glob
 from datetime import datetime
+import matplotlib.pyplot as plt
 
 freq = {'H2O': 556.9359877}
 beameff = [.75]
@@ -158,7 +159,6 @@ class HIFISpectrum(object):
                     d=np.abs(self.freq[0]-self.freq[1]))
         sig_fft = fftpack.fft(self.baseflux)
         if plot:
-            import matplotlib.pyplot as plt
             pidxs = np.where(sample_freq > 0)
             f = sample_freq[pidxs]
             pgram = np.abs(sig_fft)[pidxs]
@@ -191,7 +191,6 @@ class HIFISpectrum(object):
         lim: int
             slice range that will be used for plotting
         """
-        import matplotlib.pyplot as plt
         from matplotlib.ticker import MultipleLocator
         label = { "freq": r'$\nu$ [GHz]', "vel":'$v$ [km s$^{-1}$]' }
         if lim:
