@@ -6,6 +6,8 @@ import numpy as np
 import pyfits
 from os.path import join
 from hsso import gildas
+import glob
+from datetime import datetime
 
 freq = {'H2O': 556.9359877}
 beameff = [.75]
@@ -31,17 +33,19 @@ def fft(hdulist, sideband, subband):
     return freq, flux, throw
 
 def hififits(datadir, obsid, backend, pol, sideband):
-    import glob
     return glob.glob(
         join(datadir, str(obsid), 'level2',
         '{0}-{1}-{2}'.format(backend, pol, sideband),
         'box_001', '*.fits*'))[0]
 
+def pacsfits(datadir, obsid, band):
+    return glob.glob(join(datadir, str(obsid), 'level2',
+    'HPPPMAP{}'.format(band.upper()), '*fits.gz'))[0]
+
 class HIFISpectrum(object):
 
     def __init__(self, hdus, subband=1, byteswap=True, freq0=freq['H2O'],
             beameff=.75, j=1, k=0):
-        from datetime import datetime
         if not isinstance(hdus, pyfits.core.HDUList): hdus = pyfits.open(hdus)
         self.header = hdus[0].header
         self.freq0 = freq0
@@ -253,14 +257,13 @@ def writeto_fits(filename, columns):
 class Pacsmap(object):
     """Read PACS photometry map"""
 
-    def __init__(self, obsid, size=60, zoom=0, comet=True):
+    def __init__(self, obsid, size=60, zoom=0, comet=True, debug=False):
         """return patch centered on the nucleus"""
-        if isinstance(obsid, int):
-            self.fitsfile = glob.glob(join(datadir, str(obsid), 'level2',
-                'HPPPMAP{}'.format(args.band[0].upper()), '*fits.gz'))[0]
+        if isinstance(obsid, pyfits.core.HDUList):
+            self.hdus = obsid
         else:
             self.fitsfile = obsid
-        self.hdus = pyfits.open(self.fitsfile)
+            self.hdus = pyfits.open(self.fitsfile)
         self.cdelt2 = self.hdus[1].header['CDELT2']*3600
 
         # swap to little-endian byte order to avoid matplotlib bug
@@ -273,13 +276,13 @@ class Pacsmap(object):
             end = datetime.strptime(date_end, "%Y-%m-%dT%H:%M:%S.%f")
             mid_time = start + (end-start)/2
             # interpolate ra and dec of the comet
-            ra = gildas.deltadot(mid_time, filename=horizons_file[args.obsid],
+            ra = gildas.deltadot(mid_time, filename="horizons.txt",
                     column=2)
-            dec = gildas.deltadot(mid_time, filename=horizons_file[args.obsid],
+            dec = gildas.deltadot(mid_time, filename="horizons.txt",
                     column=3)
             # calculate direction toward the Sun
             phase_ang = gildas.deltadot(mid_time,
-                    filename=horizons_file[args.obsid], column=8)
+                    filename="horizons.txt", column=8)
             alpha = 3*np.pi/2 - phase_ang*np.pi/180
             cos, sin = np.cos(alpha), np.sin(alpha)
             # origin coordinate is 0 (Numpy and C standards)
@@ -297,7 +300,7 @@ class Pacsmap(object):
         else:
             self.patch = pmap
         if zoom: self.patch = ndimage.zoom(self.patch, zoom, order=2)
-        if args.debug:
+        if debug:
             plt.imshow(pmap, origin="lower")
 #             plt.scatter(*comet)
             plt.show()
