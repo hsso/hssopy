@@ -29,7 +29,7 @@ if __name__ == "__main__":
                        join(args.datadir, args.obsid, 'level2',
                        '{0}-{1}-{2}'.format(be, p, args.sideband),
                        'box_001', '*.fits*'))[0])
-            for i in hdulist[1].header.ascardlist().keys():
+            for i in hdulist[1].header:
                 if i.find('META_') > 0 and hdulist[1].header[i] == 'loThrow':
                     throw = hdulist[1].header[i[4:]]
             print(throw)
