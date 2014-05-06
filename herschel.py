@@ -1,7 +1,7 @@
 #!/usr/bin/python
 """Misc functions"""
 
-from scipy import constants
+from scipy import constants, ndimage
 import numpy as np
 import pyfits
 from os.path import join
@@ -9,7 +9,7 @@ from hsso import gildas
 import glob
 from datetime import datetime
 import matplotlib.pyplot as plt
-import pywcs
+import astropy.wcs as pywcs
 
 freq = {'H2O': 556.9359877}
 beameff = [.75]
@@ -284,8 +284,8 @@ class Pacsmap(object):
             alpha = 3*np.pi/2 - phase_ang*np.pi/180
             cos, sin = np.cos(alpha), np.sin(alpha)
             # origin coordinate is 0 (Numpy and C standards)
-            wcs = pywcs.WCS(self.hdus[1].header)
-            comet = wcs.wcs_sky2pix([(ra, dec)], 0)[0]
+            wcs = pywcs.WCS(self.hdus[1].header, relax=True)
+            comet = wcs.wcs_world2pix([(ra, dec)], 0)[0]
             com = [int(round(i)) for i in comet]
             sh  = comet-com
             # shift array to center on comet nucleus
