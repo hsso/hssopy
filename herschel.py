@@ -258,7 +258,8 @@ def writeto_fits(filename, columns):
 class Pacsmap(object):
     """Read PACS photometry map"""
 
-    def __init__(self, obsid, size=60, zoom=0, comet=True, debug=False, fn="horizons.txt"):
+    def __init__(self, obsid, size=60, zoom=0, comet=True, debug=False,
+            fn="horizons.txt"):
         """return patch centered on the nucleus"""
         if isinstance(obsid, pyfits.core.HDUList):
             self.hdus = obsid
@@ -267,7 +268,6 @@ class Pacsmap(object):
             self.hdus = pyfits.open(self.fitsfile)
         self.cdelt2 = self.hdus[1].header['CDELT2']*3600
 
-        # swap to little-endian byte order to avoid matplotlib bug
         pmap = self.hdus[1].data
         if comet:
             # calculate comet position at midtime
@@ -304,7 +304,7 @@ class Pacsmap(object):
             plt.show()
             plt.close()
 
-    def com(self, size=30):
+    def com(self, size=30, debug=False):
         """select the top 0.99% pixels to calculate the center of mass"""
         fov = int(round(size/self.pix))
         center = self.patch.shape[0]/2
@@ -314,7 +314,7 @@ class Pacsmap(object):
         threshold = bins[np.cumsum(hist) * (bins[1] - bins[0]) > 0.992][0]
         mpatch = np.ma.masked_less(zoom, threshold)
         mapcom = ndimage.measurements.center_of_mass(mpatch)
-        if args.debug:
+        if debug:
             plt.imshow(self.patch, origin="lower")
             mapmax = ndimage.measurements.maximum_position(zoom)[::-1]
             plt.scatter(*mapmax)
