@@ -230,6 +230,7 @@ class HIFISpectrum(object):
             plt.xlabel(label["vel"])
         if filename:
             plt.savefig(filename)
+            plt.close()
         else:
             plt.show()
 
