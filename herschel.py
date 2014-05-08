@@ -286,9 +286,9 @@ class Pacsmap(object):
             cos, sin = np.cos(alpha), np.sin(alpha)
             # origin coordinate is 0 (Numpy and C standards)
             wcs = pywcs.WCS(self.hdus[1].header, relax=True)
-            comet = wcs.wcs_world2pix([(ra, dec)], 0)[0]
-            com = [int(round(i)) for i in comet]
-            sh  = comet-com
+            cometpix = wcs.wcs_world2pix([(ra, dec)], 0)[0]
+            com = [int(round(i)) for i in cometpix]
+            sh  = cometpix-com
             # shift array to center on comet nucleus
             pmap = ndimage.interpolation.shift(pmap, sh[::-1])
             self.pix = np.abs(self.cdelt2)
@@ -301,7 +301,7 @@ class Pacsmap(object):
         if zoom: self.patch = ndimage.zoom(self.patch, zoom, order=2)
         if debug:
             plt.imshow(pmap, origin="lower")
-#             plt.scatter(*comet)
+            if comet: plt.scatter(*cometpix)
             plt.show()
             plt.close()
 
