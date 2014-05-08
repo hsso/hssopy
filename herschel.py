@@ -266,6 +266,7 @@ class Pacsmap(object):
         else:
             self.fitsfile = obsid
             self.hdus = pyfits.open(self.fitsfile)
+        # pixel size
         self.cdelt2 = self.hdus[1].header['CDELT2']*3600
 
         pmap = self.hdus[1].data
