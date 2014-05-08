@@ -289,8 +289,9 @@ class Pacsmap(object):
             cometpix = wcs.wcs_world2pix([(ra, dec)], 0)[0]
             com = [int(round(i)) for i in cometpix]
             sh  = cometpix-com
+            print(cometpix, sh)
             # shift array to center on comet nucleus
-            pmap = ndimage.interpolation.shift(pmap, sh[::-1])
+            pmap = ndimage.interpolation.shift(pmap, sh)
             self.pix = np.abs(self.cdelt2)
             self.fov = int(round(size/self.pix))
             # patch with 2fovx2fov
@@ -302,11 +303,20 @@ class Pacsmap(object):
         if debug:
             plt.imshow(pmap, origin="lower")
             if comet: plt.scatter(*cometpix)
+            plt.grid()
+            plt.show()
+            plt.close()
+            plt.imshow(self.patch, origin="lower", interpolation=None,
+                    extent=(size, -size, -size, size))
+            plt.colorbar()
+            plt.grid()
             plt.show()
             plt.close()
 
     def com(self, size=30, debug=False):
-        """select the top 0.99% pixels to calculate the center of mass"""
+        """ Calculate center of mass of brightness distribution
+
+        select the top 0.99% pixels to calculate the center of mass"""
         fov = int(round(size/self.pix))
         center = self.patch.shape[0]/2
         zoom = self.patch[center-fov:center+fov+1,
