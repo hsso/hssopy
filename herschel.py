@@ -61,7 +61,7 @@ class HIFISpectrum(object):
         self.freq = hdus[j].data.field('{0}frequency_{1}'.format(
                     self.sideband.lower(), subband))[k]
         self.flux = hdus[j].data.field('flux_{0}'.format(subband))[k]
-        self.flux /= beameff
+        self.flux *= .96/beameff
         self.throwvel = gildas.vel(self.freq0-self.throw, freq0)
         self.ra = hdus[j].data.field('longitude')[k]
         self.dec = hdus[j].data.field('latitude')[k]
@@ -289,7 +289,6 @@ class Pacsmap(object):
             cometpix = wcs.wcs_world2pix([(ra, dec)], 0)[0]
             com = [int(round(i)) for i in cometpix]
             sh  = cometpix-com
-            print(cometpix, sh)
             # shift array to center on comet nucleus
             pmap = ndimage.interpolation.shift(pmap, sh)
             self.pix = np.abs(self.cdelt2)
