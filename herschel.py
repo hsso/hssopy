@@ -7,7 +7,7 @@ import pyfits
 from os.path import join
 from hsso import gildas
 import glob
-from datetime import datetime
+from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import astropy.wcs as pywcs
 
@@ -67,6 +67,8 @@ class HIFISpectrum(object):
         self.dec = hdus[j].data.field('latitude')[k]
         self.integration = hdus[j].data.field('integration time')[k]
         self.obs_time = hdus[j].data.field('obs time')[k]
+        self.dt = datetime(year=1958, month=1, day=1, hour=0, minute=0, second=0) \
+                    + timedelta(microseconds=int(self.obs_time))
         date_obs = hdus[0].header['DATE-OBS']
         date_end = hdus[0].header['DATE-END']
         self.start = datetime.strptime(date_obs, "%Y-%m-%dT%H:%M:%S.%f")
