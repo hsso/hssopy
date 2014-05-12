@@ -63,19 +63,21 @@ class HIFISpectrum(object):
         self.obsid = hdus[0].header['OBS_ID']
         self.backend = hdus[0].header['META_0']
         for i in hdus[j].header.keys():
-            if 'key.META_' in i and hdus[j].header[i] == 'Band':
-                self.band = hdus[j].header[i[4:]]
-                self.bandi = int(self.band[0])
-            if hdus[j].header[i] == 'loThrow':
-                self.throw = hdus[j].header[i[4:]]
-            elif hdus[j].header[i] == 'sideband':
-                self.sideband = hdus[j].header[i[4:]]
+            if 'key.META_' in i:
+                if hdus[j].header[i] == 'Band':
+                    self.band = hdus[j].header[i[4:]]
+                    self.bandi = int(self.band[0])
+                elif hdus[j].header[i] == 'loThrow':
+                    self.throw = hdus[j].header[i[4:]]
+                elif hdus[j].header[i] == 'sideband':
+                    self.sideband = hdus[j].header[i[4:]]
         self.freq = hdus[j].data.field('{0}frequency_{1}'.format(
                     self.sideband.lower(), subband))[k]
         self.flux = hdus[j].data.field('flux_{0}'.format(subband))[k]
         self.beameff = ruze(self.bandi, wave(freq0*1e9))
         self.flux *= .96/self.beameff
-        self.throwvel = gildas.vel(self.freq0-self.throw, freq0)
+        if self.throw > 0:
+            self.throwvel = gildas.vel(self.freq0-self.throw, freq0)
         self.ra = hdus[j].data.field('longitude')[k]
         self.dec = hdus[j].data.field('latitude')[k]
         self.integration = hdus[j].data.field('integration time')[k]
@@ -109,10 +111,13 @@ class HIFISpectrum(object):
         self.dec = np.average((self.dec, spectrum.dec))
 
     def fold(self):
-        freq_list = [self.freq, self.freq + self.throw]
-        flux_list = [self.flux, -self.flux]
-        self.freq, self.flux = gildas.averagen(freq_list, flux_list,
-                goodval=True)
+        if self.throw > 0:
+            freq_list = [self.freq, self.freq + self.throw]
+            flux_list = [self.flux, -self.flux]
+            self.freq, self.flux = gildas.averagen(freq_list, flux_list,
+                    goodval=True)
+        else:
+            print("WARNING: throw is not defined")
 
     def resample(self, times=2):
         from scipy.signal import resample
@@ -185,10 +190,10 @@ class HIFISpectrum(object):
         self.baseline = np.real(fftpack.ifft(sig_fft))
         # calibrated flux
         self.fluxcal = self.flux - self.baseline
-        self.intens, self.error = gildas.intens(self.fluxcal, self.vel,
+        self.intens, self.error = gildas.intens(self.fluxcal, self.vel-shift,
                                                 (-linelim, linelim))
-        self.vshift, self.vshift_e = gildas.vshift(self.fluxcal, self.vel,
-                                                (-linelim, linelim))
+        self.vshift, self.vshift_e = gildas.vshift(self.fluxcal,
+                self.vel-shift, (-linelim, linelim))
         self.snr = self.intens/self.error
 
     def int(self, lim=(-1, 1), rmslim=[2,10]):
