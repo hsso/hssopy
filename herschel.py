@@ -44,10 +44,19 @@ def pacsfits(datadir, obsid, band):
     return glob.glob(join(datadir, str(obsid), 'level2',
     'HPPPMAP{}'.format(band.upper()), '*fits.gz'))[0]
 
+def ruze(band, wave):
+    beameff = (0.76, 0.76, 0.76, 0.76, 0.66, 0.76, 0.76)
+    sigma = 3.8e-6 # m
+    return beameff[band-1] * np.exp(-(4*np.pi*sigma/wave)**2)
+
+def wave(freq):
+    """calculate wavelength"""
+    return constants.c/freq
+
 class HIFISpectrum(object):
 
     def __init__(self, hdus, subband=1, byteswap=True, freq0=freq['H2O'],
-            beameff=.75, j=1, k=0):
+            j=1, k=0):
         if not isinstance(hdus, pyfits.core.HDUList): hdus = pyfits.open(hdus)
         self.header = hdus[0].header
         self.freq0 = freq0
@@ -56,6 +65,7 @@ class HIFISpectrum(object):
         for i in hdus[j].header.keys():
             if 'key.META_' in i and hdus[j].header[i] == 'Band':
                 self.band = hdus[j].header[i[4:]]
+                self.bandi = int(self.band[0])
             if hdus[j].header[i] == 'loThrow':
                 self.throw = hdus[j].header[i[4:]]
             elif hdus[j].header[i] == 'sideband':
@@ -63,7 +73,8 @@ class HIFISpectrum(object):
         self.freq = hdus[j].data.field('{0}frequency_{1}'.format(
                     self.sideband.lower(), subband))[k]
         self.flux = hdus[j].data.field('flux_{0}'.format(subband))[k]
-        self.flux *= .96/beameff
+        self.beameff = ruze(self.bandi, wave(freq0*1e9))
+        self.flux *= .96/self.beameff
         self.throwvel = gildas.vel(self.freq0-self.throw, freq0)
         self.ra = hdus[j].data.field('longitude')[k]
         self.dec = hdus[j].data.field('latitude')[k]
