@@ -54,10 +54,10 @@ class HIFISpectrum(object):
         self.obsid = hdus[0].header['OBS_ID']
         self.backend = hdus[0].header['META_0']
         for i in hdus[j].header.keys():
-            if hdus[1].header[i] == 'loThrow':
-                self.throw = hdus[1].header[i[4:]]
+            if hdus[j].header[i] == 'loThrow':
+                self.throw = hdus[j].header[i[4:]]
             elif hdus[j].header[i] == 'sideband':
-                self.sideband = hdus[1].header[i[4:]]
+                self.sideband = hdus[j].header[i[4:]]
         self.freq = hdus[j].data.field('{0}frequency_{1}'.format(
                     self.sideband.lower(), subband))[k]
         self.flux = hdus[j].data.field('flux_{0}'.format(subband))[k]
