@@ -76,7 +76,7 @@ class HIFISpectrum(object):
         self.flux = hdus[j].data.field('flux_{0}'.format(subband))[k]
         self.beameff = ruze(self.bandi, wave(freq0*1e9))
         self.flux *= .96/self.beameff
-        if self.throw > 0:
+        if abs(self.throw) > 0:
             self.throwvel = gildas.vel(self.freq0-self.throw, freq0)
         self.ra = hdus[j].data.field('longitude')[k]
         self.dec = hdus[j].data.field('latitude')[k]
@@ -111,7 +111,7 @@ class HIFISpectrum(object):
         self.dec = np.average((self.dec, spectrum.dec))
 
     def fold(self):
-        if self.throw > 0:
+        if abs(self.throw) > 0:
             freq_list = [self.freq, self.freq + self.throw]
             flux_list = [self.flux, -self.flux]
             self.freq, self.flux = gildas.averagen(freq_list, flux_list,
