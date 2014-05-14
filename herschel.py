@@ -56,7 +56,7 @@ def wave(freq):
 class HIFISpectrum(object):
 
     def __init__(self, hdus, subband=1, byteswap=True, freq0=freq['H2O'],
-            j=1, k=0):
+            j=1, k=0, beameff=0):
         if not isinstance(hdus, pyfits.core.HDUList): hdus = pyfits.open(hdus)
         self.header = hdus[0].header
         self.freq0 = freq0
@@ -74,7 +74,10 @@ class HIFISpectrum(object):
         self.freq = hdus[j].data.field('{0}frequency_{1}'.format(
                     self.sideband.lower(), subband))[k]
         self.flux = hdus[j].data.field('flux_{0}'.format(subband))[k]
-        self.beameff = ruze(self.bandi, wave(freq0*1e9))
+        if beameff:
+            self.beameff = beameff
+        else:
+            self.beameff = ruze(self.bandi, wave(freq0*1e9))
         self.flux *= .96/self.beameff
         if abs(self.throw) > 0:
             self.throwvel = gildas.vel(self.freq0-self.throw, freq0)
