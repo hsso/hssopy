@@ -226,12 +226,12 @@ class HIFISpectrum(object):
         if y=="flux" and hasattr(self, "baseline"):
             plt.plot(self.__getattribute__(x)[mask], self.baseline[mask])
             try:
-                plt.plot(self.__getattribute__(x)[self.maskvel],
-                    self.func(self.freq[self.maskvel]), 'red')
+                plt.scatter(self.__getattribute__(x)[self.maskvel],
+                    self.func(self.freq[self.maskvel]), color='red')
                 plt.plot(self.__getattribute__(x)[self.maskline],
                     self.func(self.freq[self.maskline]), 'yellow')
-                plt.plot(self.__getattribute__(x)[self.maskvelthrow],
-                    self.functh(self.freq[self.maskvelthrow]), 'red')
+                plt.scatter(self.__getattribute__(x)[self.maskvelthrow],
+                    self.functh(self.freq[self.maskvelthrow]), color='red')
             except (AttributeError, IndexError):
                 pass
         if x == 'freq':
