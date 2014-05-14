@@ -243,6 +243,7 @@ class HIFISpectrum(object):
         plt.ylabel('$T_{\mathrm{mB}}$ [K]')
         plt.xlabel(label[x])
         plt.grid(axis='both')
+        plt.autoscale(axis='x', tight=True)
         if twiny:
             ax1 = plt.gca()
             # update xlim of ax2
