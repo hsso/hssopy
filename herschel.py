@@ -306,8 +306,8 @@ class Pacsmap(object):
             dec = gildas.deltadot(mid_time, filename=fn, column=3)
             # calculate direction toward the Sun
             phase_ang = gildas.deltadot(mid_time, filename=fn, column=8)
-            alpha = 3*np.pi/2 - phase_ang*np.pi/180
-            cos, sin = np.cos(alpha), np.sin(alpha)
+            self.psang = 3*np.pi/2 - phase_ang*np.pi/180
+            cos, sin = np.cos(self.psang), np.sin(self.psang)
             # origin coordinate is 0 (Numpy and C standards)
             wcs = pywcs.WCS(self.hdus[1].header, relax=True)
             cometpix = wcs.wcs_world2pix([(ra, dec)], 0)[0]
