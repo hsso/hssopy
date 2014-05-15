@@ -307,6 +307,8 @@ class Pacsmap(object):
             # calculate direction toward the Sun
             phase_ang = gildas.deltadot(mid_time, filename=fn, column=8)
             self.psang = 3*np.pi/2 - phase_ang*np.pi/180
+            psamv = gildas.deltadot(mid_time, filename=fn, column=9)
+            self.psamv = (270-psamv)*np.pi/180
             cos, sin = np.cos(self.psang), np.sin(self.psang)
             # origin coordinate is 0 (Numpy and C standards)
             wcs = pywcs.WCS(self.hdus[1].header, relax=True)
