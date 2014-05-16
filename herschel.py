@@ -304,6 +304,8 @@ class Pacsmap(object):
             # interpolate ra and dec of the comet
             ra = gildas.deltadot(start, filename=fn, column=2)
             dec = gildas.deltadot(start, filename=fn, column=3)
+            assert(np.abs(ra - self.hdus[0].header['RA_NOM']) < 1e-5)
+            assert(np.abs(dec - self.hdus[0].header['DEC_NOM']) < 1e-5)
             # calculate direction toward the Sun
             phase_ang = gildas.deltadot(start, filename=fn, column=8)
             self.psang = 3*np.pi/2 - phase_ang*np.pi/180
