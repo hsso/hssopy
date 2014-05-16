@@ -408,6 +408,7 @@ class Pacsmap(object):
                                     zip(rind[:-1], rind[1:])])
             self.rprof_e = np.where(self.rprof > self.rprof_e, self.rprof_e,
                                     0.99*self.rprof)
+            self.rprof_e = np.where(self.rprof_e > 0., self.rprof_e, 1e-2*self.rprof)
             self.r = binsize*(np.unique(ri)[:-1] + 0.5)
         else:
             self.r = sr
