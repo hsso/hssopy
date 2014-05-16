@@ -302,12 +302,12 @@ class Pacsmap(object):
             end = datetime.strptime(date_end, "%Y-%m-%dT%H:%M:%S.%f")
             mid_time = start + (end-start)/2
             # interpolate ra and dec of the comet
-            ra = gildas.deltadot(mid_time, filename=fn, column=2)
-            dec = gildas.deltadot(mid_time, filename=fn, column=3)
+            ra = gildas.deltadot(start, filename=fn, column=2)
+            dec = gildas.deltadot(start, filename=fn, column=3)
             # calculate direction toward the Sun
-            phase_ang = gildas.deltadot(mid_time, filename=fn, column=8)
+            phase_ang = gildas.deltadot(start, filename=fn, column=8)
             self.psang = 3*np.pi/2 - phase_ang*np.pi/180
-            psamv = gildas.deltadot(mid_time, filename=fn, column=9)
+            psamv = gildas.deltadot(start, filename=fn, column=9)
             self.psamv = (270-psamv)*np.pi/180
             cos, sin = np.cos(self.psang), np.sin(self.psang)
             # origin coordinate is 0 (Numpy and C standards)
