@@ -298,18 +298,18 @@ class Pacsmap(object):
             # calculate comet position at midtime
             date_obs = self.hdus[0].header['DATE-OBS']
             date_end = self.hdus[0].header['DATE-END']
-            start = datetime.strptime(date_obs, "%Y-%m-%dT%H:%M:%S.%f")
+            self.start = datetime.strptime(date_obs, "%Y-%m-%dT%H:%M:%S.%f")
             end = datetime.strptime(date_end, "%Y-%m-%dT%H:%M:%S.%f")
-            mid_time = start + (end-start)/2
+            mid_time = self.start + (end-self.start)/2
             # interpolate ra and dec of the comet
-            ra = gildas.deltadot(start, filename=fn, column=2)
-            dec = gildas.deltadot(start, filename=fn, column=3)
-            assert(np.abs(ra - self.hdus[0].header['RA_NOM']) < 1e-5)
-            assert(np.abs(dec - self.hdus[0].header['DEC_NOM']) < 1e-5)
+            ra = gildas.deltadot(self.start, filename=fn, column=2)
+            dec = gildas.deltadot(self.start, filename=fn, column=3)
+            assert(np.abs(ra - self.hdus[0].header['RA_NOM']) < 4e-5)
+            assert(np.abs(dec - self.hdus[0].header['DEC_NOM']) < 4e-5)
             # calculate direction toward the Sun
-            phase_ang = gildas.deltadot(start, filename=fn, column=8)
+            phase_ang = gildas.deltadot(self.start, filename=fn, column=8)
             self.psang = 3*np.pi/2 - phase_ang*np.pi/180
-            psamv = gildas.deltadot(start, filename=fn, column=9)
+            psamv = gildas.deltadot(self.start, filename=fn, column=9)
             self.psamv = (270-psamv)*np.pi/180
             cos, sin = np.cos(self.psang), np.sin(self.psang)
             # origin coordinate is 0 (Numpy and C standards)
@@ -326,7 +326,7 @@ class Pacsmap(object):
                               com[0]-self.fov:com[0]+self.fov+1]
         else:
             self.patch = pmap
-        if zoom: self.patch = ndimage.zoom(self.patch, zoom, order=2)
+        if zoom > 1: self.patch = ndimage.zoom(self.patch, zoom, order=2)
         if debug:
             plt.imshow(pmap, origin="lower")
             if comet: plt.scatter(*cometpix)
