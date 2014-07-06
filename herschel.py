@@ -3,7 +3,7 @@
 
 from scipy import constants, ndimage
 import numpy as np
-import pyfits
+from astropy.io import fits as pyfits
 from os.path import join
 from hsso import gildas
 import glob
@@ -57,7 +57,7 @@ class HIFISpectrum(object):
 
     def __init__(self, hdus, subband=1, byteswap=True, freq0=freq['H2O'],
             j=1, k=0, beameff=0):
-        if not isinstance(hdus, pyfits.core.HDUList): hdus = pyfits.open(hdus)
+        if not isinstance(hdus, pyfits.HDUList): hdus = pyfits.open(hdus)
         self.header = hdus[0].header
         self.freq0 = freq0
         self.obsid = hdus[0].header['OBS_ID']
@@ -285,7 +285,7 @@ class Pacsmap(object):
     def __init__(self, obsid, size=60, zoom=0, comet=True, debug=False,
             fn="horizons.txt"):
         """return patch centered on the nucleus"""
-        if isinstance(obsid, pyfits.core.HDUList):
+        if isinstance(obsid, pyfits.HDUList):
             self.hdus = obsid
         else:
             self.fitsfile = obsid
