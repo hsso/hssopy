@@ -2,7 +2,6 @@
 """Herschel related functions"""
 
 from scipy import constants
-import astrocon as ac
 import math
 import pyfits
 import os
@@ -47,7 +46,7 @@ def size(arcsec, delta=1):
     
     arcsec -- angular size (")
     delta -- distance to Earth (AU)"""
-    return delta*ac.AU*math.sin(arcsec/3600.*math.pi/180)/1e5
+    return delta*constants.au*math.sin(arcsec/3600.*math.pi/180)/1e3
 
 def angsize(au, delta=1):
     """Calculate angular size
