@@ -53,7 +53,26 @@ def wave(freq):
     """calculate wavelength"""
     return constants.c/freq
 
-class HIFISpectrum(object):
+class HIPESpectrum(object):
+
+    def __init__(self, hdus, subband=1, freq0=freq['H2O'],
+            j=1, k=0, beameff=0):
+        if not isinstance(hdus, pyfits.HDUList): hdus = pyfits.open(hdus)
+        for i in hdus[j].header.keys():
+            if 'key.META_' in i:
+                if hdus[j].header[i] == 'sideband':
+                    self.sideband = hdus[j].header[i[4:]]
+        self.freq = hdus[j].data.field('{0}frequency_{1}'.format(
+                    self.sideband.lower(), subband))[k]
+        self.flux = hdus[j].data.field('flux_{0}'.format(subband))[k]
+        self.throw = 0.
+
+    @property
+    def vel(self):
+        return gildas.vel(self.freq, self.freq0)
+
+
+class HIFISpectrum(HIPESpectrum):
 
     def __init__(self, hdus, subband=1, byteswap=True, freq0=freq['H2O'],
             j=1, k=0, beameff=0):
@@ -85,6 +104,7 @@ class HIFISpectrum(object):
         self.dec = hdus[j].data.field('latitude')[k]
         self.integration = hdus[j].data.field('integration time')[k]
         self.obs_time = hdus[j].data.field('obs time')[k]
+        # observing (mid)-time
         self.dt = datetime(year=1958, month=1, day=1, hour=0, minute=0, second=0) \
                     + timedelta(microseconds=int(self.obs_time))
         date_obs = hdus[0].header['DATE-OBS']
@@ -96,10 +116,6 @@ class HIFISpectrum(object):
         if byteswap:
             self.flux = self.flux.byteswap().newbyteorder('L')
             self.freq = self.freq.byteswap().newbyteorder('L')
-
-    @property
-    def vel(self):
-        return gildas.vel(self.freq, self.freq0)
 
     def add(self, spectrum):
         if np.all(self.freq == spectrum.freq):
