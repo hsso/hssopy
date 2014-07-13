@@ -85,6 +85,106 @@ class HIPESpectrum(object):
         self.ra = np.average((self.ra, spectrum.ra))
         self.dec = np.average((self.dec, spectrum.dec))
 
+    def mask(self, line, shift, linelim, baselim):
+        maskline = np.where(np.abs(self.vel - line - shift) < linelim)
+        maskvel = np.where((np.abs(self.vel - line - shift) < baselim) &
+                                (np.abs(self.vel - line - shift) > linelim))
+        func = np.poly1d(np.polyfit(self.freq[maskvel],
+                                self.baseflux[maskvel], 3))
+        return maskline, maskvel, func
+
+    def fftbase(self, fftlim, line=(0,), shift=0, linelim=1, baselim=3,
+                plot=False, throw=False):
+        """Fit baseline using FFT
+
+        Parameters
+        ----------
+        throw : boolean
+            True for unfolded data
+        """
+        from scipy import fftpack
+        self.baseflux = self.flux.copy()
+        if line:
+            # mask emission line
+            self.maskline, self.maskvel, self.func = self.mask(line[0], shift,
+                    linelim, baselim)
+            self.baseflux[self.maskline] = self.func(self.freq[self.maskline])
+            if throw:
+                maskline, self.maskvelthrow, self.functh = self.mask(
+                        self.throwvel, shift, linelim, baselim)
+                self.baseflux[maskline] = self.functh(self.freq[maskline])
+
+        # FFT
+        sample_freq = fftpack.fftfreq(self.flux.size,
+                    d=np.abs(self.freq[0]-self.freq[1]))
+        sig_fft = fftpack.fft(self.baseflux)
+        if plot:
+            pidxs = np.where(sample_freq > 0)
+            f = sample_freq[pidxs]
+            pgram = np.abs(sig_fft)[pidxs]
+            plt.loglog(f, pgram)
+            plt.axvline(x=fftlim, linestyle='--')
+            plt.show()
+        sig_fft[np.abs(sample_freq) > fftlim] = 0
+        self.baseline = np.real(fftpack.ifft(sig_fft))
+        # calibrated flux
+        self.fluxcal = self.flux - self.baseline
+        self.intens, self.error = gildas.intens(self.fluxcal, self.vel-shift,
+                                                (-linelim, linelim))
+        self.vshift, self.vshift_e = gildas.vshift(self.fluxcal,
+                self.vel-shift, (-linelim, linelim))
+        self.snr = self.intens/self.error
+
+    def plot(self, x="freq", y="flux", twiny=False, filename=None, lim=None):
+        """Plot spectra
+
+        Parameters
+        ----------
+        lim: int
+            slice range that will be used for plotting
+        """
+        from matplotlib.ticker import MultipleLocator
+        label = { "freq": r'$\nu$ [GHz]', "vel":'$v$ [km s$^{-1}$]' }
+        if lim:
+            mask = np.where(np.abs(self.__getattribute__(x)) < lim)
+        else:
+            mask = slice(0, -1)
+        plt.plot(self.__getattribute__(x)[mask], self.__getattribute__(y)[mask],
+                drawstyle='steps-mid')
+        if y=="flux" and hasattr(self, "baseline"):
+            plt.plot(self.__getattribute__(x)[mask], self.baseline[mask])
+            try:
+                plt.scatter(self.__getattribute__(x)[self.maskvel],
+                    self.func(self.freq[self.maskvel]), color='red')
+                plt.plot(self.__getattribute__(x)[self.maskline],
+                    self.func(self.freq[self.maskline]), 'yellow')
+                plt.scatter(self.__getattribute__(x)[self.maskvelthrow],
+                    self.functh(self.freq[self.maskvelthrow]), color='red')
+            except (AttributeError, IndexError):
+                pass
+        if x == 'freq':
+            plt.axvline(x=self.freq0, linestyle='--')
+            if hasattr(self, 'throw'):
+                plt.axvline(x=self.freq0-self.throw, linestyle='dotted')
+        if y == 'fluxcal': plt.axhline(y=0, linestyle='--')
+        if x == 'vel': plt.gca().xaxis.set_minor_locator(MultipleLocator(1))
+        plt.ylabel('$T_{\mathrm{mB}}$ [K]')
+        plt.xlabel(label[x])
+        plt.grid(axis='both')
+        plt.autoscale(axis='x', tight=True)
+        if twiny:
+            ax1 = plt.gca()
+            # update xlim of ax2
+            ax2 = ax1.twiny()
+            x1, x2 = ax1.get_xlim()
+            ax2.set_xlim(gildas.vel(x1, self.freq0),
+                         gildas.vel(x2, self.freq0))
+            plt.xlabel(label["vel"])
+        if filename:
+            plt.savefig(filename)
+            plt.close()
+        else:
+            plt.show()
 
 class HIFISpectrum(HIPESpectrum):
 
@@ -160,62 +260,12 @@ class HIFISpectrum(HIPESpectrum):
         else:
             self.flux -= np.mean(self.flux)
 
-    def mask(self, line, shift, linelim, baselim):
-        maskline = np.where(np.abs(self.vel - line - shift) < linelim)
-        maskvel = np.where((np.abs(self.vel - line - shift) < baselim) &
-                                (np.abs(self.vel - line - shift) > linelim))
-        func = np.poly1d(np.polyfit(self.freq[maskvel],
-                                self.baseflux[maskvel], 3))
-        return maskline, maskvel, func
-
     def base(self, shift=0, lim=(2, 10), deg=1):
         """Fit polynomial baseline
         """
         basep = gildas.basepoly(self.vel-shift, self.flux, lim, deg=deg)
         # calibrated flux
         self.fluxcal = self.flux - basep(self.vel)
-
-    def fftbase(self, fftlim, line=(0,), shift=0, linelim=1, baselim=3,
-                plot=False, throw=False):
-        """Fit baseline using FFT
-
-        Parameters
-        ----------
-        throw : boolean
-            True for unfolded data
-        """
-        from scipy import fftpack
-        self.baseflux = self.flux.copy()
-        if line:
-            # mask emission line
-            self.maskline, self.maskvel, self.func = self.mask(line[0], shift,
-                    linelim, baselim)
-            self.baseflux[self.maskline] = self.func(self.freq[self.maskline])
-            if throw:
-                maskline, self.maskvelthrow, self.functh = self.mask(
-                        self.throwvel, shift, linelim, baselim)
-                self.baseflux[maskline] = self.functh(self.freq[maskline])
-
-        # FFT
-        sample_freq = fftpack.fftfreq(self.flux.size,
-                    d=np.abs(self.freq[0]-self.freq[1]))
-        sig_fft = fftpack.fft(self.baseflux)
-        if plot:
-            pidxs = np.where(sample_freq > 0)
-            f = sample_freq[pidxs]
-            pgram = np.abs(sig_fft)[pidxs]
-            plt.loglog(f, pgram)
-            plt.axvline(x=fftlim, linestyle='--')
-            plt.show()
-        sig_fft[np.abs(sample_freq) > fftlim] = 0
-        self.baseline = np.real(fftpack.ifft(sig_fft))
-        # calibrated flux
-        self.fluxcal = self.flux - self.baseline
-        self.intens, self.error = gildas.intens(self.fluxcal, self.vel-shift,
-                                                (-linelim, linelim))
-        self.vshift, self.vshift_e = gildas.vshift(self.fluxcal,
-                self.vel-shift, (-linelim, linelim))
-        self.snr = self.intens/self.error
 
     def int(self, lim=(-1, 1), rmslim=[2,10]):
         """Line intensity"""
@@ -224,57 +274,6 @@ class HIFISpectrum(HIPESpectrum):
     def vsh(self, lim=(-1, 1), rmslim=[2,10]):
         """Velocity shift"""
         return gildas.vshift(self.fluxcal, self.vel, lim, rmslim)
-
-    def plot(self, x="freq", y="flux", twiny=False, filename=None, lim=None):
-        """Plot spectra
-
-        Parameters
-        ----------
-        lim: int
-            slice range that will be used for plotting
-        """
-        from matplotlib.ticker import MultipleLocator
-        label = { "freq": r'$\nu$ [GHz]', "vel":'$v$ [km s$^{-1}$]' }
-        if lim:
-            mask = np.where(np.abs(self.__getattribute__(x)) < lim)
-        else:
-            mask = slice(0, -1)
-        plt.plot(self.__getattribute__(x)[mask], self.__getattribute__(y)[mask],
-                drawstyle='steps-mid')
-        if y=="flux" and hasattr(self, "baseline"):
-            plt.plot(self.__getattribute__(x)[mask], self.baseline[mask])
-            try:
-                plt.scatter(self.__getattribute__(x)[self.maskvel],
-                    self.func(self.freq[self.maskvel]), color='red')
-                plt.plot(self.__getattribute__(x)[self.maskline],
-                    self.func(self.freq[self.maskline]), 'yellow')
-                plt.scatter(self.__getattribute__(x)[self.maskvelthrow],
-                    self.functh(self.freq[self.maskvelthrow]), color='red')
-            except (AttributeError, IndexError):
-                pass
-        if x == 'freq':
-            plt.axvline(x=self.freq0, linestyle='--')
-            if hasattr(self, 'throw'):
-                plt.axvline(x=self.freq0-self.throw, linestyle='dotted')
-        if y == 'fluxcal': plt.axhline(y=0, linestyle='--')
-        if x == 'vel': plt.gca().xaxis.set_minor_locator(MultipleLocator(1))
-        plt.ylabel('$T_{\mathrm{mB}}$ [K]')
-        plt.xlabel(label[x])
-        plt.grid(axis='both')
-        plt.autoscale(axis='x', tight=True)
-        if twiny:
-            ax1 = plt.gca()
-            # update xlim of ax2
-            ax2 = ax1.twiny()
-            x1, x2 = ax1.get_xlim()
-            ax2.set_xlim(gildas.vel(x1, self.freq0),
-                         gildas.vel(x2, self.freq0))
-            plt.xlabel(label["vel"])
-        if filename:
-            plt.savefig(filename)
-            plt.close()
-        else:
-            plt.show()
 
     def save(self, filename, flux="flux"):
         """Save spectrum to ASCII file"""
