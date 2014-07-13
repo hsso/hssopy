@@ -65,11 +65,25 @@ class HIPESpectrum(object):
         self.freq = hdus[j].data.field('{0}frequency_{1}'.format(
                     self.sideband.lower(), subband))[k]
         self.flux = hdus[j].data.field('flux_{0}'.format(subband))[k]
-        self.throw = 0.
+        self.freq0 = freq0
+        self.ra = hdus[j].data.field('longitude')[k]
+        self.dec = hdus[j].data.field('latitude')[k]
 
     @property
     def vel(self):
         return gildas.vel(self.freq, self.freq0)
+
+    def add(self, spectrum):
+        if np.all(self.freq == spectrum.freq):
+            self.flux += spectrum.flux
+            self.flux /= 2
+        else:
+            freq_list = [self.freq, spectrum.freq]
+            flux_list = [self.flux, spectrum.flux]
+            self.freq, self.flux = gildas.averagen(freq_list, flux_list,
+                    goodval=True)
+        self.ra = np.average((self.ra, spectrum.ra))
+        self.dec = np.average((self.dec, spectrum.dec))
 
 
 class HIFISpectrum(HIPESpectrum):
@@ -116,18 +130,6 @@ class HIFISpectrum(HIPESpectrum):
         if byteswap:
             self.flux = self.flux.byteswap().newbyteorder('L')
             self.freq = self.freq.byteswap().newbyteorder('L')
-
-    def add(self, spectrum):
-        if np.all(self.freq == spectrum.freq):
-            self.flux += spectrum.flux
-            self.flux /= 2
-        else:
-            freq_list = [self.freq, spectrum.freq]
-            flux_list = [self.flux, spectrum.flux]
-            self.freq, self.flux = gildas.averagen(freq_list, flux_list,
-                    goodval=True)
-        self.ra = np.average((self.ra, spectrum.ra))
-        self.dec = np.average((self.dec, spectrum.dec))
 
     def fold(self):
         if abs(self.throw) > 0:
