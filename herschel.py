@@ -15,7 +15,7 @@ freq = {'H2O': 556.9359877}
 beameff = [.75]
 
 def fwhm(freq=freq['H2O'], diam=3.5, unit='arcsec'):
-    """calculate FWHM"""
+    """calculate FWHM in radians"""
     fwhm = 1.2*constants.c/freq/1e9/diam
     if unit=='arcsec': fwhm *= 180/np.pi*3600 # convert rad to arcsec
     return fwhm
@@ -186,6 +186,11 @@ class HIPESpectrum(object):
         else:
             plt.show()
 
+    def save(self, filename, flux="flux"):
+        """Save spectrum to ASCII file"""
+        np.savetxt(filename, np.transpose((self.freq, self.vel,
+                    self.__getattribute__(flux))))
+
 class HIFISpectrum(HIPESpectrum):
 
     def __init__(self, hdus, subband=1, byteswap=True, freq0=freq['H2O'],
@@ -274,11 +279,6 @@ class HIFISpectrum(HIPESpectrum):
     def vsh(self, lim=(-1, 1), rmslim=[2,10]):
         """Velocity shift"""
         return gildas.vshift(self.fluxcal, self.vel, lim, rmslim)
-
-    def save(self, filename, flux="flux"):
-        """Save spectrum to ASCII file"""
-        np.savetxt(filename, np.transpose((self.freq, self.vel,
-                    self.__getattribute__(flux))))
 
     def tofits(self, filename, columns=("freq", "fluxcal")):
         """Save spectrum to FITS file"""
