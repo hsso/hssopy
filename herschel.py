@@ -316,8 +316,8 @@ class Pacsmap(object):
             date_obs = self.hdus[0].header['DATE-OBS']
             date_end = self.hdus[0].header['DATE-END']
             self.start = datetime.strptime(date_obs, "%Y-%m-%dT%H:%M:%S.%f")
-            end = datetime.strptime(date_end, "%Y-%m-%dT%H:%M:%S.%f")
-            mid_time = self.start + (end-self.start)/2
+            self.end = datetime.strptime(date_end, "%Y-%m-%dT%H:%M:%S.%f")
+            mid_time = self.start + (self.end-self.start)/2
             # interpolate ra and dec of the comet
             ra = gildas.deltadot(self.start, filename=fn, column=2)
             dec = gildas.deltadot(self.start, filename=fn, column=3)
