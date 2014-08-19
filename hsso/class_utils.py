@@ -65,6 +65,8 @@ def linfunc(a, x, peak_freqs):
         Coefficients of sin and cos functions
     x: array
         Frequency values
+    peak_freqs: array
+        Peak frequency values
     """
     num = len(peak_freqs)
     sinwave = [a[i]*np.sin(peak_freqs[i]*x) for i in range(len(peak_freqs))]
@@ -76,3 +78,32 @@ def fitfunc(p, x, peak_freqs):
     sinwave = [p[2*i]*np.sin(peak_freqs[i]*x) + p[2*i+1]*np.cos(peak_freqs[i]*x)
                 for i in range(len(peak_freqs))]
     return np.sum(sinwave, axis=0)
+
+def fft_peaks(freq, flux, num):
+    """Calculate power spectrum using FFT"""
+    sample_freq = fftpack.fftfreq(flux.size, d=np.abs(freq[0]-freq[1]))
+    sig_fft = fftpack.fft(flux)
+    # Because the resulting power is symmetric, only the positive part of the
+    # spectrum needs to be used for finding the frequency
+    pidxs = np.where(sample_freq > 0)
+    f = sample_freq[pidxs]
+    pgram = np.abs(sig_fft)[pidxs]
+    # find local maxima not at the edge of the periodogram
+    maxmask = np.r_[False, pgram[1:] > pgram[:-1]] &\
+                np.r_[pgram[:-1] > pgram[1:], False]
+    sortarg = np.argsort(pgram[maxmask])
+    peak_freqs = f[maxmask][sortarg[-num:]]
+    peak_flux = pgram[maxmask][sortarg[-num:]]
+    return f, pgram, peak_freqs, peak_flux
+
+def astroML_peaks(freq, flux, f, num):
+    from astroML.time_series import lomb_scargle
+    dy = np.ones(len(flux))*1e-3
+    pgram = lomb_scargle(freq, flux, dy, 2*np.pi*f, generalized=False)
+    # find local maxima not at the edge of the periodogram
+    maxmask = np.r_[False, pgram[1:] > pgram[:-1]] &\
+                np.r_[pgram[:-1] > pgram[1:], False]
+    sortarg = np.argsort(pgram[maxmask])
+    peak_freqs = f[maxmask][sortarg[-num:]]
+    peak_flux = pgram[maxmask][sortarg[-num:]]
+    return f, pgram, peak_freqs, peak_flux
