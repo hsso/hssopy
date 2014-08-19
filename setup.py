@@ -8,6 +8,7 @@ setup(name='hsso',
     author_email='valborro@princeton.edu',
     version='0.1',
     packages=find_packages(),
+    py_modules=['herschel'],
     requires=[
         "numpy",
         "matplotlib",
