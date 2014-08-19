@@ -57,7 +57,15 @@ def pgram_peaks(freq, flux, f, num):
     return pgram, peak_freqs, peak_flux
 
 def linfunc(a, x, peak_freqs):
-    """Target function"""
+    """Target function
+
+    Parameters
+    ----------
+    a: array
+        Coefficients of sin and cos functions
+    x: array
+        Frequency values
+    """
     num = len(peak_freqs)
     sinwave = [a[i]*np.sin(peak_freqs[i]*x) for i in range(len(peak_freqs))]
     coswave = [a[num+i]*np.cos(peak_freqs[i]*x) for i in range(len(peak_freqs))]
