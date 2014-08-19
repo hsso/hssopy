@@ -44,6 +44,16 @@ def spectra_mask(indexes, source, line, tel):
     return mask
 
 def pgram_peaks(freq, flux, f, num):
+    """Target function
+
+    Computes the Lomb-Scarge periodogram and finds frequencies
+    of the `num` largest peaks.
+
+    Parameters
+    ----------
+    f: array_like
+        angular frequencies for periodogram
+    """
     from scipy.signal import lombscargle
     normval = freq.shape[0]
     pgram = lombscargle(freq, flux, f)/normval
@@ -97,7 +107,18 @@ def fft_peaks(freq, flux, num):
     return pgram, peak_freqs, peak_flux
 
 def astroML_peaks(freq, flux, f, num):
+    """Target function
+
+    Computes the Lomb-Scarge periodogram. The astroML module
+    is not compatible with python 3.
+
+    Parameters
+    ----------
+    f: array_like
+        angular frequencies for periodogram
+    """
     from astroML.time_series import lomb_scargle
+    # dy is a sequence of observational errors
     dy = np.ones(len(flux))*1e-3
     pgram = lomb_scargle(freq, flux, dy, f, generalized=False)
     # find local maxima not at the edge of the periodogram
