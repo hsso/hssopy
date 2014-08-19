@@ -94,16 +94,16 @@ def fft_peaks(freq, flux, num):
     sortarg = np.argsort(pgram[maxmask])
     peak_freqs = f[maxmask][sortarg[-num:]]
     peak_flux = pgram[maxmask][sortarg[-num:]]
-    return f, pgram, peak_freqs, peak_flux
+    return pgram, peak_freqs, peak_flux
 
 def astroML_peaks(freq, flux, f, num):
     from astroML.time_series import lomb_scargle
     dy = np.ones(len(flux))*1e-3
-    pgram = lomb_scargle(freq, flux, dy, 2*np.pi*f, generalized=False)
+    pgram = lomb_scargle(freq, flux, dy, f, generalized=False)
     # find local maxima not at the edge of the periodogram
     maxmask = np.r_[False, pgram[1:] > pgram[:-1]] &\
                 np.r_[pgram[:-1] > pgram[1:], False]
     sortarg = np.argsort(pgram[maxmask])
     peak_freqs = f[maxmask][sortarg[-num:]]
     peak_flux = pgram[maxmask][sortarg[-num:]]
-    return f, pgram, peak_freqs, peak_flux
+    return pgram, peak_freqs, peak_flux
