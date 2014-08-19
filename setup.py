@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='hsso',
     description='Herschel Data Analysis Utilities',
     author='Miguel de Val-Borro',
     author_email='valborro@princeton.edu',
     version='0.1',
-    py_modules=['class_utils'],
+    packages=['hsso'],
     requires=[
         "numpy",
         "matplotlib",
