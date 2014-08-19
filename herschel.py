@@ -56,7 +56,8 @@ def wave(freq):
 class HIPESpectrum(object):
 
     def __init__(self, hdus, subband=1, freq0=freq['H2O'],
-            j=1, k=0, beameff=0):
+            j=1, k=0):
+        """Read data from FITS file produced by HIPE"""
         if not isinstance(hdus, pyfits.HDUList): hdus = pyfits.open(hdus)
         for i in hdus[j].header.keys():
             if 'key.META_' in i:
@@ -191,10 +192,18 @@ class HIPESpectrum(object):
         np.savetxt(filename, np.transpose((self.freq, self.vel,
                     self.__getattribute__(flux))))
 
+class Spectrum(HIPESpectrum):
+
+    def __init__(self, freq, flux, freq0=freq['H2O']):
+        self.freq = freq
+        self.freq0 = freq0
+        self.flux = flux
+
 class HIFISpectrum(HIPESpectrum):
 
     def __init__(self, hdus, subband=1, byteswap=True, freq0=freq['H2O'],
             j=1, k=0, beameff=0):
+        """Read data from HIFI FITS data file"""
         if not isinstance(hdus, pyfits.HDUList): hdus = pyfits.open(hdus)
         self.header = hdus[0].header
         self.freq0 = freq0
