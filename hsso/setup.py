@@ -8,7 +8,7 @@ setup(name='hsso',
     author_email='valborro@princeton.edu',
     version='0.1',
     py_modules=['class_utils'],
-    install_requires=[
+    requires=[
         "numpy",
         "matplotlib",
     ],
