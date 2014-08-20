@@ -130,11 +130,12 @@ class HIPESpectrum(object):
         self.baseline = np.real(fftpack.ifft(sig_fft))
         # calibrated flux
         self.fluxcal = self.flux - self.baseline
-        self.intens, self.error = gildas.intens(self.fluxcal, self.vel-shift,
-                                                (-linelim, linelim))
-        self.vshift, self.vshift_e = gildas.vshift(self.fluxcal,
-                self.vel-shift, (-linelim, linelim))
-        self.snr = self.intens/self.error
+        for i in range(len(line)):
+            self.intens, self.error = gildas.intens(self.fluxcal,
+                    self.vel - line[i] - shift, (-linelim, linelim))
+            self.vshift, self.vshift_e = gildas.vshift(self.fluxcal,
+                self.vel - line[i] - shift, (-linelim, linelim))
+            self.snr = self.intens/self.error
 
     def plot(self, x="freq", y="flux", twiny=False, filename=None, lim=None):
         """Plot spectra
