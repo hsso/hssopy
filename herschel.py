@@ -94,7 +94,7 @@ class HIPESpectrum(object):
                                 self.baseflux[maskvel], 3))
         return maskline, maskvel, func
 
-    def fftbase(self, fftlim, line=(0,), shift=0, linelim=1, baselim=3,
+    def fftbase(self, fftlim, line=(0,), shift=0, linelim=(1,), baselim=(3,),
                 plot=False, throw=False):
         """Fit baseline using FFT
 
@@ -105,14 +105,14 @@ class HIPESpectrum(object):
         """
         from scipy import fftpack
         self.baseflux = self.flux.copy()
-        for l in line:
+        for i in range(len(line)):
             # mask emission line
-            self.maskline, self.maskvel, self.func = self.mask(l, shift,
-                    linelim, baselim)
+            self.maskline, self.maskvel, self.func = self.mask(line[i], shift,
+                    linelim[i], baselim[i])
             self.baseflux[self.maskline] = self.func(self.freq[self.maskline])
             if throw:
                 maskline, self.maskvelthrow, self.functh = self.mask(
-                        self.throwvel, shift, linelim, baselim)
+                        self.throwvel, shift, linelim[i], baselim[i])
                 self.baseflux[maskline] = self.functh(self.freq[maskline])
 
         # FFT
@@ -132,9 +132,9 @@ class HIPESpectrum(object):
         self.fluxcal = self.flux - self.baseline
         for i in range(len(line)):
             self.intens, self.error = gildas.intens(self.fluxcal,
-                    self.vel - line[i] - shift, (-linelim, linelim))
+                    self.vel - line[i] - shift, (-linelim[i], linelim[i]))
             self.vshift, self.vshift_e = gildas.vshift(self.fluxcal,
-                self.vel - line[i] - shift, (-linelim, linelim))
+                self.vel - line[i] - shift, (-linelim[i], linelim[i]))
             self.snr = self.intens/self.error
 
     def plot(self, x="freq", y="flux", twiny=False, filename=None, lim=None):
