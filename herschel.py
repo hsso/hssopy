@@ -168,7 +168,8 @@ class HIPESpectrum(object):
             if hasattr(self, 'throw'):
                 plt.axvline(x=self.freq0-self.throw, linestyle='dotted')
         if y == 'fluxcal': plt.axhline(y=0, linestyle='--')
-        if x == 'vel': plt.gca().xaxis.set_minor_locator(MultipleLocator(1))
+        if x == 'vel' and np.abs(self.__getattribute__(x)[-1]) < 20:
+            plt.gca().xaxis.set_minor_locator(MultipleLocator(1))
         plt.ylabel('$T_{\mathrm{mB}}$ [K]')
         plt.xlabel(label[x])
         plt.grid(axis='both')
