@@ -105,9 +105,9 @@ class HIPESpectrum(object):
         """
         from scipy import fftpack
         self.baseflux = self.flux.copy()
-        if line:
+        for l in line:
             # mask emission line
-            self.maskline, self.maskvel, self.func = self.mask(line[0], shift,
+            self.maskline, self.maskvel, self.func = self.mask(l, shift,
                     linelim, baselim)
             self.baseflux[self.maskline] = self.func(self.freq[self.maskline])
             if throw:
@@ -153,6 +153,7 @@ class HIPESpectrum(object):
         plt.plot(self.__getattribute__(x)[mask], self.__getattribute__(y)[mask],
                 drawstyle='steps-mid')
         if y=="flux" and hasattr(self, "baseline"):
+            mask = slice(30, -20)
             plt.plot(self.__getattribute__(x)[mask], self.baseline[mask])
             try:
                 plt.scatter(self.__getattribute__(x)[self.maskvel],
@@ -167,7 +168,7 @@ class HIPESpectrum(object):
             plt.axvline(x=self.freq0, linestyle='--')
             if hasattr(self, 'throw'):
                 plt.axvline(x=self.freq0-self.throw, linestyle='dotted')
-        if y == 'fluxcal': plt.axhline(y=0, linestyle='--')
+        if 'fluxcal' in y: plt.axhline(y=0, linestyle='--')
         if x == 'vel' and np.abs(self.__getattribute__(x)[-1]) < 20:
             plt.gca().xaxis.set_minor_locator(MultipleLocator(1))
         plt.ylabel('$T_{\mathrm{mB}}$ [K]')
