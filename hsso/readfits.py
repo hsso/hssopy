@@ -69,17 +69,17 @@ def read(filename, rec="WBS", sb="USB", pol="H"):
                 tel = telescop(hdulist, j, i)
                 # find receiver
                 if not tel: tel= "-"+rec[0]+pol
-                if tel.find("-"+rec[0]+pol) > 0:
+                if tel.find("-"+rec[0]+pol) >= 0:
                     # flux for subband
                     x = hdulist[j].data.field('data')[i]
                     # rest frequency in GHz
 #                     restfreq = hdulist[j].data.field('restfreq')[i]*1e-9
                     restfreq = hdulist[j].header['restfreq']*1e-9
-                    if tel.find("-H") > 0: # HRS
+                    if tel.find("-H") >= 0: # HRS
                         crpix1 = hdulist[j].header['crpix1']
                         cdelt1 = hdulist[j].header['cdelt1']*1e-9 # step
 #                         cdelt1 = hdulist[j].data.field('cdelt1')[i]*1e-9
-                    elif tel.find("-W") > 0: # WBS
+                    elif tel.find("-W") >= 0: # WBS
                         crpix1 = hdulist[j].header['crpix1']
 #             crpix1 = hdulist[j].data.field('crpix1')[i]
                         cdelt1 = hdulist[j].header['cdelt1']*1e-9 # step
