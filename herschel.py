@@ -233,8 +233,14 @@ class HIFISpectrum(HIPESpectrum):
             self.throwvel = gildas.vel(self.freq0-self.throw, freq0)
         self.ra = hdus[j].data.field('longitude')[k]
         self.dec = hdus[j].data.field('latitude')[k]
-        self.integration = hdus[j].data.field('integration time')[k]
-        self.obs_time = hdus[j].data.field('obs time')[k]
+        try:
+            self.integration = hdus[j].data.field('integration time')[k]
+        except KeyError:
+            self.integration = hdus[j].data.field('integrations')[k]
+        try:
+            self.obs_time = hdus[j].data.field('obs time')[k]
+        except KeyError:
+            self.obs_time = hdus[j].data.field('obsTime')[k]
         # observing (mid)-time
         self.dt = datetime(year=1958, month=1, day=1, hour=0, minute=0, second=0) \
                     + timedelta(microseconds=int(self.obs_time))
