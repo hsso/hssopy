@@ -336,7 +336,7 @@ class Pacsmap(object):
             self.start = datetime.strptime(date_obs, "%Y-%m-%dT%H:%M:%S.%f")
             self.end = datetime.strptime(date_end, "%Y-%m-%dT%H:%M:%S.%f")
             mid_time = self.start + (self.end-self.start)/2
-            # interpolate ra and dec of the comet
+            # interpolate ra and dec of the comet (start time)
             ra = gildas.deltadot(self.start, filename=fn, column=2)
             dec = gildas.deltadot(self.start, filename=fn, column=3)
             assert(np.abs(ra - self.hdus[0].header['RA_NOM']) < 4e-5)
@@ -348,6 +348,7 @@ class Pacsmap(object):
             self.psamv = (270-psamv)*np.pi/180
             cos, sin = np.cos(self.psang), np.sin(self.psang)
             # origin coordinate is 0 (Numpy and C standards)
+            # admit regcognized informal extensions of WCS standard
             wcs = pywcs.WCS(self.hdus[1].header, relax=True)
             cometpix = wcs.wcs_world2pix([(ra, dec)], 0)[0]
             com = [int(round(i)) for i in cometpix]
