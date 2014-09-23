@@ -457,3 +457,10 @@ class Pacsmap(object):
             self.r = self.r[mask]
             self.rprof = self.rprof[mask]
             self.rprof_e = self.rprof_e[mask]
+
+    def tofits(self, filename):
+        """
+        Save image to FITS file
+        """
+        hdu = pyfits.PrimaryHDU(self.patch)
+        hdu.writeto(filename, clobber=True)
