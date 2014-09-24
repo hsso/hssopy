@@ -10,6 +10,7 @@ import numpy as np
 from os.path import join
 import matplotlib.pyplot as plt
 import jpl
+import pprint
 
 # Parsing command line arguments
 parser = argparse.ArgumentParser()
@@ -23,6 +24,7 @@ parser.add_argument('--sideband', default='USB', choices=('USB', 'LSB'))
 parser.add_argument('--datadir', default='./')
 parser.add_argument('-f', '--freq', default=None, type=float)
 parser.add_argument('--jpl', default="")
+parser.add_argument('-d', '--debug', action="store_true")
 args = parser.parse_args()
 
 for be in args.backend:
@@ -31,6 +33,7 @@ for be in args.backend:
                    join(args.datadir, args.obsid, 'level2',
                    '{0}-{1}-{2}'.format(be, p, args.sideband),
                    'box_001', '*.fits*'))[0])
+        if args.debug: pprint.pprint(hdulist[0].header)
         for i in hdulist[1].header:
             if i.find('META_') > 0 and hdulist[1].header[i] == 'loThrow':
                 throw = hdulist[1].header[i[4:]]
