@@ -9,6 +9,7 @@ setup(name='hsso',
     version='0.1',
     packages=find_packages(),
     py_modules=['herschel'],
+    scripts=['hsso/hipe.py'],
     requires=[
         "numpy",
         "matplotlib",

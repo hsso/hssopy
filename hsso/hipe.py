@@ -1,4 +1,7 @@
 #!/usr/bin/python
+"""
+Quick view of HIFI data
+"""
 
 import pyfits
 import argparse
@@ -10,6 +13,7 @@ import jpl
 
 # Parsing command line arguments
 parser = argparse.ArgumentParser()
+parser.add_argument('obsid', default="")
 parser.add_argument('-b', '--backend', default=('WBS',), nargs='+',
                     choices=('HRS', 'WBS'))
 parser.add_argument('--pol', default=('H',), nargs='+', choices=('H', 'V'))
@@ -17,7 +21,6 @@ parser.add_argument('--subband', default=range(1,5), type=int, nargs='+',
                     choices=range(1, 5))
 parser.add_argument('--sideband', default='USB', choices=('USB', 'LSB'))
 parser.add_argument('--datadir', default='./')
-parser.add_argument('-o', '--obsid', default="")
 parser.add_argument('-f', '--freq', default=None, type=float)
 parser.add_argument('--jpl', default="")
 args = parser.parse_args()
