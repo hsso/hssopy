@@ -376,7 +376,7 @@ class Pacsmap(object):
             self.psamv = (270-psamv)*np.pi/180
             cos, sin = np.cos(self.psang), np.sin(self.psang)
             # origin coordinate is 0 (Numpy and C standards)
-            # admit regcognized informal extensions of WCS standard
+            # admit recognized informal extensions of WCS standard
             wcs = pywcs.WCS(self.hdus[1].header, relax=True)
             cometpix = wcs.wcs_world2pix([(ra, dec)], 0)[0]
             com = [int(round(i)) for i in cometpix]
@@ -404,10 +404,12 @@ class Pacsmap(object):
             plt.show()
             plt.close()
 
-    def com(self, size=30, debug=False):
-        """ Calculate center of mass of brightness distribution
+    def center_of_mass(self, size=30, debug=False):
+        """
+        Calculate center of mass of brightness distribution
 
-        select the top 0.99% pixels to calculate the center of mass"""
+        select the top 0.99% pixels to calculate the center of mass
+        """
         fov = int(round(size/self.pix))
         center = self.patch.shape[0]/2
         zoom = self.patch[center-fov:center+fov+1,
@@ -431,7 +433,10 @@ class Pacsmap(object):
         self.com = [center - fov + i for i in mapcom]
 
     def shift(self, center, size=30):
-        """shift array to be centerd at cneter"""
+        """
+        Shift array to be centerd at center
+        """
+        # comet position
         self.comet = [self.fov-center[0], self.fov-center[1]]
         self.fov = int(round(size/self.pix))
         self.patch = self.patch[center[0]-self.fov:center[0]+self.fov+1,
