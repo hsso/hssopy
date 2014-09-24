@@ -315,7 +315,18 @@ def writeto_fits(filename, columns):
     tbhdu.writeto(filename)
 
 class Pacsmap(object):
-    """Read PACS photometry map"""
+    """
+    Read PACS photometry map
+
+    fn: string
+        Ephemeris ASCII file retrieved from the HORIZONS system containing the
+        following columns:
+        0. date time (0 1)
+        1. Astrometric RA & DEC (2 3)
+        19. Heliocentric range & range-rate (4 5)
+        20. Observer range & range-rate (6 7)
+        27. Sun-Target radial & -vel pos. angle (8 9)
+    """
 
     def __init__(self, obsid, size=60, zoom=0, comet=True, debug=False,
             fn="horizons.txt"):
