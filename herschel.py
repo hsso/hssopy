@@ -41,6 +41,16 @@ def hififits(datadir, obsid, backend, pol, sideband):
         'box_001', '*.fits*'))[0]
 
 def pacsfits(datadir, obsid, band):
+    """
+    Return FITS file with PACS image
+
+    datadir: str
+        full path to data directory
+    obsid: int
+        Herschel obsID
+    band: str
+        'b' (blue band) or 'r' (red band)
+    """
     return glob.glob(join(datadir, str(obsid), 'level2',
     'HPPPMAP{}'.format(band.upper()), '*fits.gz'))[0]
 
@@ -330,7 +340,14 @@ class Pacsmap(object):
 
     def __init__(self, obsid, size=60, zoom=0, comet=True, debug=False,
             fn="horizons.txt"):
-        """return patch centered on the nucleus"""
+        """
+        Return patch centered on the nucleus
+
+        Parameters
+        ----------
+        size: float
+            size of patch is (2*size, 2*size) in arcseconds
+        """
         if isinstance(obsid, pyfits.HDUList):
             self.hdus = obsid
         else:
