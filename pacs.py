@@ -21,9 +21,10 @@ gc = aplpy.FITSFigure(fitsfile)
 ra = hdus[0].header['RA_NOM']
 dec = hdus[0].header['DEC_NOM']
 # Center at the comet position
-gc.recenter(ra, dec, width=0.02,height=0.02)
-gc.show_markers(ra, dec)
-gc.show_colorscale()
-# gc.show_colorscale(stretch="log", vmid=-0.001)
-# gc.show_colorscale(stretch="power")
+# gc.recenter(ra, dec, width=0.02,height=0.02)
+gc.show_markers(ra, dec, marker="+", color="white")
+gc.show_colorscale(pmin=0.6)
+# gc.show_colorscale(stretch="log", vmid=-0.0001)
+# gc.show_colorscale(stretch="arcsinh")
+gc.show_contour(colors="white")
 gc.save('{}_{}.png'.format(args.obsid, args.band))
