@@ -19,5 +19,9 @@ fitsfile = pacsfits(args.datadir, args.obsid, args.band[0])
 hdus = pyfits.open(fitsfile)
 gc = aplpy.FITSFigure(fitsfile)
 gc.show_colorscale()
-gc.show_markers(hdus[0].header['RA_NOM'], hdus[0].header['DEC_NOM'])
+ra = hdus[0].header['RA_NOM']
+dec = hdus[0].header['DEC_NOM']
+gc.show_markers(ra, dec)
+# Center at the comet position
+gc.recenter(ra, dec, width=0.02,height=0.02)
 gc.save('myfirstplot.png')
