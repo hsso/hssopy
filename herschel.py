@@ -55,6 +55,9 @@ def pacsfits(datadir, obsid, band):
     'HPPPMAP{}'.format(band.upper()), '*fits.gz'))[0]
 
 def ruze(band, wave):
+    """
+    http://herschel.esac.esa.int/Docs/TechnicalNotes/HIFI_Beam_Efficiencies_17Nov2010.pdf
+    """
     beameff = (0.76, 0.76, 0.76, 0.76, 0.66, 0.76, 0.76)
     sigma = 3.8e-6 # m
     return beameff[band-1] * np.exp(-(4*np.pi*sigma/wave)**2)
