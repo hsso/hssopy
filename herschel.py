@@ -14,6 +14,10 @@ import astropy.wcs as pywcs
 freq = {'H2O': 556.9359877}
 beameff = [.75]
 
+# http://herschel.esac.esa.int/Docs/TechnicalNotes/HIFI_Beam_Efficiencies_17Nov2010.pdf
+beameff = (0.76, 0.76, 0.76, 0.76, 0.66, 0.76, 0.76)
+sigma = 3.8e-6 # m
+
 # http://herschel.esac.esa.int/twiki/pub/Public/HifiCalibrationWeb/HifiBeamReleaseNote_Sep2014.pdf
 ruze_scaling = {
 '1H': (0.649, 0.007, 2.857, 0.004, 0.624, 0.007, 2.278, 0.004),
@@ -72,13 +76,13 @@ def pacsfits(datadir, obsid, band):
     return glob.glob(join(datadir, str(obsid), 'level2',
     'HPPPMAP{}'.format(band.upper()), '*fits.gz'))[0]
 
-def ruze(band, wave):
+def ruze(band, pol, wave):
     """
-    http://herschel.esac.esa.int/Docs/TechnicalNotes/HIFI_Beam_Efficiencies_17Nov2010.pdf
+    Ruze scaling function
     """
-    beameff = (0.76, 0.76, 0.76, 0.76, 0.66, 0.76, 0.76)
-    sigma = 3.8e-6 # m
-    return beameff[band-1] * np.exp(-(4*np.pi*sigma/wave)**2)
+    eta_mb, sigma_mb = ruze_scaling['{0}{1}'.format(band, pol)][4::2]
+    sigma_mb *= 1e-6 # m
+    return eta_mb * np.exp(-(4*np.pi*sigma_mb/wave)**2)
 
 def wave(freq):
     """calculate wavelength"""
@@ -236,9 +240,10 @@ class Spectrum(HIPESpectrum):
 class HIFISpectrum(HIPESpectrum):
 
     def __init__(self, hdus, subband=1, byteswap=True, freq0=freq['H2O'],
-            j=1, k=0, beameff=0):
+            j=1, k=0, beameff=0, pol='H'):
         """Read data from HIFI FITS data file"""
         if not isinstance(hdus, pyfits.HDUList): hdus = pyfits.open(hdus)
+        self.pol = pol
         self.header = hdus[0].header
         self.freq0 = freq0
         self.obsid = hdus[0].header['OBS_ID']
@@ -258,7 +263,7 @@ class HIFISpectrum(HIPESpectrum):
         if beameff:
             self.beameff = beameff
         else:
-            self.beameff = ruze(self.bandi, wave(freq0*1e9))
+            self.beameff = ruze(self.bandi, self.pol, wave(freq0*1e9))
         self.flux *= .96/self.beameff
         if abs(self.throw) > 0:
             self.throwvel = gildas.vel(self.freq0-self.throw, freq0)
