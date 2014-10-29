@@ -3,7 +3,7 @@
 
 import pyfits
 import numpy as np
-import physcon as pc
+import scipy.constants as sc
 
 class HipeFits:
     """read fits output from HiClass"""
@@ -93,5 +93,7 @@ def read(filename, rec="WBS", sb="USB", pol="H"):
                     return freq[goodval], x[goodval], throw
 
 def vel(freq, freq0, dvel=0.):
-    """return velocity scale"""
-    return pc.c*1e-3 * (freq0-freq)/freq0 + dvel
+    """
+    return velocity scale in km/s
+    """
+    return sc.c*1e-3 * (freq0-freq)/freq0 + dvel
