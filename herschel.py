@@ -393,8 +393,11 @@ class Pacsmap(object):
             # interpolate ra and dec of the comet (start time)
             ra = gildas.deltadot(self.start, filename=fn, column=2)
             dec = gildas.deltadot(self.start, filename=fn, column=3)
-            assert(np.abs(ra - self.hdus[0].header['RA_NOM']) < 4e-5)
-            assert(np.abs(dec - self.hdus[0].header['DEC_NOM']) < 4e-5)
+            try:
+                assert(np.abs(ra - self.hdus[0].header['RA_NOM']) < 4e-5)
+                assert(np.abs(dec - self.hdus[0].header['DEC_NOM']) < 4e-5)
+            except:
+                print(np.abs(ra - self.hdus[0].header['RA_NOM'])*180/np.pi*3600)
             # calculate direction toward the Sun
             phase_ang = gildas.deltadot(self.start, filename=fn, column=8)
             self.psang = 3*np.pi/2 - phase_ang*np.pi/180
@@ -503,10 +506,12 @@ class Pacsmap(object):
                                     zip(rind[:-1], rind[1:])])
             self.rprof_e = np.array([np.std(sim[lo:hi]) for lo,hi in
                                     zip(rind[:-1], rind[1:])])
+            # reset error values
             self.rprof_e = np.where(self.rprof > self.rprof_e, self.rprof_e,
                                     0.99*self.rprof)
-            self.rprof_e = np.where(self.rprof_e > 0., self.rprof_e, 1e-2*self.rprof)
-            self.r = binsize*(np.unique(ri)[:-1] + 0.5)
+            self.rprof_e = np.where(self.rprof_e > 0., self.rprof_e,
+                                    1e-2*self.rprof)
+            self.r = binsize*(np.unique(ri)[:] + 0.5)
         else:
             self.r = sr
             self.rprof = sim
