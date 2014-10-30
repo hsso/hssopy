@@ -20,21 +20,20 @@ args = parser.parse_args()
 fitsfile = pacsfits(args.datadir, args.obsid, args.band[0])
 hdus = fits.open(fitsfile)
 print(np.max(hdus[1].data))
-plt.imshow(hdus[1].data[310:350,180:240], origin="lower")
-plt.savefig('imshow.png')
+plt.imshow(hdus[1].data, origin="lower")
 plt.show()
 plt.close()
 
 gc = aplpy.FITSFigure(fitsfile, hdu=1)
 ra = hdus[0].header['RA_NOM']
 dec = hdus[0].header['DEC_NOM']
-# Center at the comet position
-gc.recenter(ra, dec, width=0.02,height=0.02)
+# Center at the comet position k with radius in degrees
+gc.recenter(ra, dec, radius=0.01)
 # gc.show_colorscale(pmin=20, vmid=-5e-5, stretch="log")
-gc.show_colorscale(vmin=1e-4)
 # gc.show_colorscale(stretch="log", vmid=-0.0001)
 # gc.show_colorscale(stretch="arcsinh")
 gc.show_contour(colors="white")
+gc.show_colorscale(vmin=1e-4)
 gc.show_markers(ra, dec, marker="+", facecolor="white", edgecolor="white")
 gc.add_colorbar()
 gc.save('{}_{}.png'.format(args.obsid, args.band))
