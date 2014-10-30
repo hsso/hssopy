@@ -532,6 +532,41 @@ class Pacsmap(object):
             self.rprof = self.rprof[mask]
             self.rprof_e = self.rprof_e[mask]
 
+    def plot(self, size, levels, filename=None):
+        """
+        Plot image
+        """
+        import matplotlib.cm as cm
+        extent=(size, -size, -size, size)
+        plt.imshow(self.patch, origin="lower", interpolation=None,
+                cmap=cm.gist_heat_r, extent=extent)
+        plt.colorbar()
+        plt.autoscale(False)
+        # zpatch = ndimage.zoom(patch, {'blue': 4, 'red': 8}[args.band])
+        plt.contour(self.patch, origin="lower", levels=np.power(10, levels),
+                extent=extent)
+        plt.scatter(0, 0, marker='+', s=50, linewidths=1, color='white')
+        plt.xlabel("RA offset [arcsec]")
+        plt.ylabel("Dec offset [arcsec]")
+        radius = .7*size # arcsec
+        cos, sin = np.cos(self.psang), np.sin(self.psang)
+        x1, y1 = radius*cos, radius*sin
+        plt.arrow(x1*.4, y1*.4, x1*.6, y1*.6, fc='k', ec='k', head_width=1.5,
+                head_length=2)
+        cos, sin = np.cos(self.psamv), np.sin(self.psamv)
+        x1, y1 = radius*cos, radius*sin
+        plt.arrow(x1*.4, y1*.4, x1*.6, y1*.6, fc='k', ec='k', head_width=1.5,
+                head_length=2, linestyle='dotted')
+        plt.annotate(r'$\odot$', xy=(self.psang, 1.15*radius), color='black',
+            xycoords='polar', va='center', ha='center')
+        plt.title(self.start.strftime("%d/%m/%Y"))
+        ax = plt.gca()
+        ax.set_axis_off()
+        extent = ax.get_window_extent().transformed(plt.gcf().dpi_scale_trans.inverted())
+        if filename: plt.savefig(filename, bbox_inches=extent)
+        plt.show()
+        plt.close()
+
     def tofits(self, filename):
         """
         Save image to FITS file
