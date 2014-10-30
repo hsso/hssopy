@@ -447,19 +447,19 @@ class Pacsmap(object):
         threshold = bins[np.cumsum(hist) * (bins[1] - bins[0]) > percentile][0]
         mpatch = np.ma.masked_less(zoom, threshold)
         mapcom = ndimage.measurements.center_of_mass(mpatch)
-        if debug:
-            plt.imshow(self.patch, origin="lower")
-            mapmax = ndimage.measurements.maximum_position(zoom)[::-1]
-            plt.scatter(*mapmax)
-            # plot center-of-mass
-            plt.scatter(*mapcom[::-1], color='r')
-            plt.show()
-            plt.close()
         # center of mass
         self.com = [int(round(i)) for i in mapcom]
         # fraction of pixel to com
         self.sh  = np.array(mapcom) - self.com
         self.com = [center - fov + i for i in mapcom]
+        if debug:
+            plt.imshow(self.patch, origin="lower")
+            mapmax = ndimage.measurements.maximum_position(self.patch)[::-1]
+            plt.scatter(*mapmax)
+            # plot center-of-mass
+            plt.scatter(*self.com[::-1], color='r')
+            plt.show()
+            plt.close()
 
     def shift(self, center, size=30):
         """
