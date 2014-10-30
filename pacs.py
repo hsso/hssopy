@@ -4,7 +4,7 @@ Quick view of PACS data
 """
 
 from herschel import pacsfits
-from astropy.io import fits as pyfits
+from astropy.io import fits
 import argparse
 import aplpy
 import numpy as np
@@ -18,7 +18,7 @@ parser.add_argument('--datadir', default='./')
 args = parser.parse_args()
 
 fitsfile = pacsfits(args.datadir, args.obsid, args.band[0])
-hdus = pyfits.open(fitsfile)
+hdus = fits.open(fitsfile)
 print(np.max(hdus[1].data))
 plt.imshow(hdus[1].data[310:350,180:240], origin="lower")
 plt.savefig('imshow.png')
