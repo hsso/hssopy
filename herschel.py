@@ -15,10 +15,12 @@ freq = {'H2O': 556.9359877}
 beameff = [.75]
 
 # http://herschel.esac.esa.int/Docs/TechnicalNotes/HIFI_Beam_Efficiencies_17Nov2010.pdf
+# efficiencies v1
 beameff = (0.76, 0.76, 0.76, 0.76, 0.66, 0.76, 0.76)
 sigma = 3.8e-6 # m
 
 # http://herschel.esac.esa.int/twiki/pub/Public/HifiCalibrationWeb/HifiBeamReleaseNote_Sep2014.pdf
+# efficiencies v2
 ruze_scaling = {
 '1H': (0.649, 0.007, 2.857, 0.004, 0.624, 0.007, 2.278, 0.004),
 '1V': (0.632, 0.007, 2.834, 0.003, 0.618, 0.007, 2.248, 0.004),
@@ -76,12 +78,16 @@ def pacsfits(datadir, obsid, band):
     return glob.glob(join(datadir, str(obsid), 'level2',
     'HPPPMAP{}'.format(band.upper()), '*fits.gz'))[0]
 
-def ruze(band, pol, wave):
+def ruze(band, pol, wave, release):
     """
     Ruze scaling function
     """
-    eta_mb, sigma_mb = ruze_scaling['{0}{1}'.format(band, pol)][4::2]
-    sigma_mb *= 1e-6 # m
+    if release > 1:
+        eta_mb, sigma_mb = ruze_scaling['{0}{1}'.format(band, pol)][4::2]
+        sigma_mb *= 1e-6 # m
+    else:
+        eta_mb = beameff[band-1]
+        sigma_mb = sigma
     return eta_mb * np.exp(-(4*np.pi*sigma_mb/wave)**2)
 
 def wave(freq):
@@ -240,7 +246,7 @@ class Spectrum(HIPESpectrum):
 class HIFISpectrum(HIPESpectrum):
 
     def __init__(self, hdus, subband=1, byteswap=True, freq0=freq['H2O'],
-            j=1, k=0, beameff=0, pol='H'):
+            j=1, k=0, beameff=0, forwardeff=.96, release=2, pol='H'):
         """Read data from HIFI FITS data file"""
         if not isinstance(hdus, pyfits.HDUList): hdus = pyfits.open(hdus)
         self.pol = pol
@@ -263,8 +269,8 @@ class HIFISpectrum(HIPESpectrum):
         if beameff:
             self.beameff = beameff
         else:
-            self.beameff = ruze(self.bandi, self.pol, wave(freq0*1e9))
-        self.flux *= .96/self.beameff
+            self.beameff = ruze(self.bandi, self.pol, wave(freq0*1e9), release)
+        self.flux *= forwardeff/self.beameff
         if abs(self.throw) > 0:
             self.throwvel = gildas.vel(self.freq0-self.throw, freq0)
         self.ra = hdus[j].data.field('longitude')[k]
