@@ -451,8 +451,13 @@ class Pacsmap(object):
         self.com = [int(round(i)) for i in mapcom]
         # fraction of pixel to com
         self.sh  = np.array(mapcom) - self.com
-        self.com = [center - fov + i for i in mapcom]
+        self.com = [center - fov -.5 + i for i in mapcom]
+        print(center, fov, mapcom, self.com)
         if debug:
+            plt.imshow(mpatch, origin="lower")
+            plt.scatter(*mapcom[::-1], color='r')
+            plt.show()
+            plt.close()
             plt.imshow(self.patch, origin="lower")
             mapmax = ndimage.measurements.maximum_position(self.patch)[::-1]
             plt.scatter(*mapmax)
