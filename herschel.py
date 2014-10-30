@@ -433,7 +433,7 @@ class Pacsmap(object):
             plt.show()
             plt.close()
 
-    def center_of_mass(self, size=30, debug=False):
+    def center_of_mass(self, size=30, percentile=.992, debug=False):
         """
         Calculate center of mass of brightness distribution
 
@@ -444,7 +444,7 @@ class Pacsmap(object):
         zoom = self.patch[center-fov:center+fov+1,
                             center-fov:center+fov+1]
         hist, bins = np.histogram(zoom.ravel(), normed=True, bins=100)
-        threshold = bins[np.cumsum(hist) * (bins[1] - bins[0]) > 0.992][0]
+        threshold = bins[np.cumsum(hist) * (bins[1] - bins[0]) > percentile][0]
         mpatch = np.ma.masked_less(zoom, threshold)
         mapcom = ndimage.measurements.center_of_mass(mpatch)
         if debug:
