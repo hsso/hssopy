@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 import astropy.wcs as pywcs
 
 freq = {'H2O': 556.9359877}
-beameff = [.75]
 
 # http://herschel.esac.esa.int/Docs/TechnicalNotes/HIFI_Beam_Efficiencies_17Nov2010.pdf
 # efficiencies v1
