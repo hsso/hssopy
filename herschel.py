@@ -144,7 +144,8 @@ class HIPESpectrum(object):
 
     def fftbase(self, fftlim, line=(0,), shift=0, linelim=(1,), baselim=(3,),
                 plot=False, throw=False):
-        """Fit baseline using FFT
+        """
+        Fit baseline using FFT
 
         Parameters
         ----------
@@ -276,9 +277,12 @@ class HIFISpectrum(HIPESpectrum):
                     self.throw = hdus[j].header[i[4:]]
                 elif hdus[j].header[i] == 'sideband':
                     self.sideband = hdus[j].header[i[4:]]
-        self.freq = hdus[j].data.field('{0}frequency_{1}'.format(
+        freq = hdus[j].data.field('{0}frequency_{1}'.format(
                     self.sideband.lower(), subband))[k]
-        self.flux = hdus[j].data.field('flux_{0}'.format(subband))[k]
+        flux = hdus[j].data.field('flux_{0}'.format(subband))[k]
+        nanflux = np.isnan(flux)
+        self.freq = freq[~nanflux]
+        self.flux = flux[~nanflux]
         if beameff:
             self.beameff = beameff
         else:
