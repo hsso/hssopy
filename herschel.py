@@ -13,6 +13,14 @@ import astropy.wcs as pywcs
 
 freq = {'H2O': 556.9359877}
 
+# http://herschel.esac.esa.int/Docs/HIFI/html/ch05s05.html#table-efficiencies
+# beam efficiency v0.1
+# 0.754 for 557 GHz
+# 0.742 for 988 GHz
+# 0.715 for 1113 GHz
+# 0.710 for 1669 GHz
+# beameff = (0.76, 0.75, 0.75, 0.74, 0.64, 0.72, 0.69)
+
 # http://herschel.esac.esa.int/Docs/TechnicalNotes/HIFI_Beam_Efficiencies_17Nov2010.pdf
 # efficiencies v1
 beameff = (0.76, 0.76, 0.76, 0.76, 0.66, 0.76, 0.76)
@@ -558,13 +566,15 @@ class Pacsmap(object):
         plt.arrow(x1*.4, y1*.4, x1*.6, y1*.6, fc='k', ec='k', head_width=1.5,
                 head_length=2, linestyle='dotted')
         plt.annotate(r'$\odot$', xy=(self.psang, 1.15*radius), color='black',
-            xycoords='polar', va='center', ha='center')
+                xycoords='polar', va='center', ha='center')
         plt.title(self.start.strftime("%d/%m/%Y"))
         ax = plt.gca()
         ax.set_axis_off()
         extent = ax.get_window_extent().transformed(plt.gcf().dpi_scale_trans.inverted())
-        if filename: plt.savefig(filename, bbox_inches=extent)
-        plt.show()
+        if filename:
+            plt.savefig(filename, bbox_inches=extent)
+        else:
+            plt.show()
         plt.close()
 
     def tofits(self, filename):
