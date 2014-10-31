@@ -19,10 +19,6 @@ args = parser.parse_args()
 
 fitsfile = pacsfits(args.datadir, args.obsid, args.band[0])
 hdus = fits.open(fitsfile)
-print(np.max(hdus[1].data))
-plt.imshow(hdus[1].data, origin="lower")
-plt.show()
-plt.close()
 
 gc = aplpy.FITSFigure(fitsfile, hdu=1)
 ra = hdus[0].header['RA_NOM']

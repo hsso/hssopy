@@ -238,10 +238,13 @@ class HIPESpectrum(object):
         else:
             plt.show()
 
-    def save(self, filename, flux="flux"):
+    def save(self, filename, flux="flux", velmask=1e6):
         """Save spectrum to ASCII file"""
-        np.savetxt(filename, np.transpose((self.freq, self.vel,
-                    self.__getattribute__(flux))))
+        mask = [np.abs(self.vel) < velmask]
+        np.savetxt(filename, np.transpose((self.freq[mask],
+                    self.vel[mask],
+                    self.__getattribute__(flux)[mask])),
+                    fmt='%.6e')
 
 class Spectrum(HIPESpectrum):
 
@@ -251,6 +254,9 @@ class Spectrum(HIPESpectrum):
         self.flux = flux
 
 class HIFISpectrum(HIPESpectrum):
+    """
+    Class for HIFI spectra downloaded from HSA
+    """
 
     def __init__(self, hdus, subband=1, byteswap=True, freq0=freq['H2O'],
             j=1, k=0, beameff=0, forwardeff=.96, release=2, pol='H'):
