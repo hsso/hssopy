@@ -3,7 +3,10 @@
 
 from scipy import constants
 import math
-import pyfits
+try:
+    from astropy.io import fits as pyfits
+except ImportError:
+    import pyfits
 import os
 from os.path import expanduser
 from hsso import gildas
