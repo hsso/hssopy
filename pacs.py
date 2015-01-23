@@ -8,7 +8,6 @@ from astropy.io import fits
 import argparse
 import aplpy
 import numpy as np
-import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
 parser.add_argument('obsid', default="")
