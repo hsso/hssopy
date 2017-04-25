@@ -104,7 +104,7 @@ def average(freqh, fluxh, freqv, fluxv, goodval=False):
 
 def averagen(freq, flux, weights=None, goodval=False):
     """Average spectra
-    
+
     Parameters
     ----------
     freq : list of arrays
@@ -140,9 +140,42 @@ def basepoly(v, flux, lim, deg=2, debug=False):
         plt.close()
     return func
 
+
+def fftbase(freq, vel, flux, fftlim, lim=(-3, -1, 1, 3), plot=False):
+    """
+    Fit baseline using FFT
+
+    Parameters
+    ----------
+    fftlim : list
+    """
+    from scipy import fftpack
+    # mask emission line
+    baseflux = flux.copy()
+    maskline = np.where((vel > lim[1]) & (vel < lim[2]))
+    maskbase = np.where(((vel > lim[0]) & (vel < lim[1])) |
+                        ((vel > lim[2]) & (vel < lim[3])))
+    func = np.poly1d(np.polyfit(freq[maskbase], flux[maskbase], 3))
+    baseflux[maskline] = func(freq[maskline])
+    # FFT
+    sample_freq = fftpack.fftfreq(flux.size, d=np.abs(freq[0]-freq[1]))
+    sig_fft = fftpack.fft(baseflux)
+    if plot:
+        pidxs = np.where(sample_freq > 0)
+        f = sample_freq[pidxs]
+        pgram = np.abs(sig_fft)[pidxs]
+        plt.loglog(f, pgram)
+        plt.axvline(x=fftlim, linestyle='--')
+        plt.show()
+    sig_fft[np.abs(sample_freq) > fftlim] = 0
+    baseline = np.real(fftpack.ifft(sig_fft))
+    # calibrated flux
+    # fluxcal = flux - baseline
+    return baseline
+
 def vel(freq, freq0, deltadot=0.):
     """return velocity scale
-    
+
     deltadot: km/s"""
     return constants.c*1e-3 * (freq0-freq)/freq0 - deltadot
 
@@ -151,8 +184,9 @@ def freq(vel, freq0, sign=1, deltadot=0.):
     return freq0*(1. - sign*(vel + deltadot)/constants.c/1e-3)
 
 def rms(flux, vel, lim=[2, 6]):
-    """return rms between [xi,xo]"""
-    mask = np.where((vel > lim[0]) & (vel < lim[1]))
+    """return rms between [xi,xo]
+    """
+    mask = np.where((np.abs(vel) > lim[0]) & (np.abs(vel) < lim[1]))
     return np.std(flux[mask])
 
 def intens(flux, vel, lim=[-1.2, 1.2], rmslim=[2,5], rmserror=None):
@@ -262,33 +296,33 @@ def movav(x, y, window_len=4):
 
 def smooth(x,window_len=11,window='hanning'):
     """smooth the data using a window with requested size.
-    
+
     This method is based on the convolution of a scaled window with the signal.
-    The signal is prepared by introducing reflected copies of the signal 
+    The signal is prepared by introducing reflected copies of the signal
     (with the window size) in both ends so that transient parts are minimized
     in the begining and end part of the output signal.
-    
+
     input:
-        x: the input signal 
+        x: the input signal
         window_len: the dimension of the smoothing window; should be an odd integer
         window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
             flat window will produce a moving average smoothing.
 
     output:
         the smoothed signal
-        
+
     example:
 
     t=linspace(-2,2,0.1)
     x=sin(t)+randn(len(t))*0.1
     y=smooth(x)
-    
-    see also: 
-    
+
+    see also:
+
     numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
     scipy.signal.lfilter
- 
-    TODO: the window parameter could be the window itself if an array instead of a string   
+
+    TODO: the window parameter could be the window itself if an array instead of a string
     """
 
     if x.ndim != 1:
